@@ -1,0 +1,656 @@
+<!doctype html>
+<html ng-app="generator" lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>HTML5 globe Generator</title>
+	
+		<link rel="stylesheet" href="css/colorbox.css">
+		<link rel="stylesheet" href="css/earthviewer_styles_unique.min.css">
+
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<!-- <link rel="stylesheet" href="css/bootstrap-responsive.min.css"> -->
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.10/angular.min.js"></script>
+		
+		<script src="js/app.js"></script>
+		<script src="js/controllers/mainController.js"></script>
+
+		<script src="js/bootstrap.min.js"></script>
+
+
+		<SCRIPT TYPE="text/javascript" src="js/globe.min.js"></SCRIPT>
+
+		<style>
+			div#globeGl_ {
+    			background: #fff;
+			}
+			#mainOptionsContainer{
+				height: 500px;
+				overflow: scroll;
+			}
+			input{
+				margin-bottom: 0px!important;
+				padding: 0 6px !important;
+			}
+			#coords{
+				margin-top: 10px;
+				float: left;
+			}
+			.row{
+				margin: 10px;
+				border: solid #ddd;
+				border-radius: 10px;
+				padding: 28px 5px;
+			}
+
+			xmp .hidden, #hotspot_output .hidden{
+				display: block !important;
+				visibility: visible !important;
+			}
+			.row{
+				background: #EBEBEB;
+			}
+			.form-horizontal .form-group{
+				margin-left: 0px;
+				margin-right: 0px;
+			}
+			.modal-body {
+				background: #ddd;
+			}
+
+		</style>
+
+
+</head>
+<body ng-controller="mainController" ng-init="init()">
+	<div class="container-fluid">
+		<div class="row">
+	  		<div class="col-md-12">
+				<h1>HTML5 Globe generator.</h1>
+	  		</div>
+		</div>
+		<div class="row">
+	  		<div class="col-md-6">
+	  			<h3>Preview</h3>
+				<div id="globeGl_" class="globeGl" style="width:500px; height:500px" ng-click="populateCoords()"></div>
+	  		</div>
+	  		<div class="col-md-6">
+	  			<h3>Options</h3>
+	  			<div id="mainOptionsContainer">
+					
+					<table class="table table-hover table-striped table-bordered table-condensed">
+						<thead>
+							<tr>
+								<th>Label</th>
+								<th>Value</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="g in results"style="cursor:pointer;">
+								<td>{{g.label}}</td>
+								<td><input style="width:150px" class="form-control" type="text" ng-model="g.val" placeholder="g.val" ng-change="onValChange()"></input></td>
+								<td>{{g.desc}}</td>
+							</tr>
+						</tbody>
+					</table>
+	  			</div>
+	  		</div>
+
+		</div>
+		
+
+		<div class="row">
+			<div class="col-md-6">
+				<form class="form-horizontal" role="form">
+					<div class="form-group">
+		    			
+		    			<label for="lat">Lattitude:</label>
+		    			<input type="text" class="form-control" id="lat" placeholder="Lat" ng-model="hotspot.lat">
+		  			
+		    			<label for="lon">Longitude:</label>
+		    			<input type="text" class="form-control" id="lon" placeholder="Long" ng-model="hotspot.lng">
+
+		    			<label for="url">URL:</label>
+		    			<input type="text" class="form-control" id="url" placeholder="http://example.com" ng-model="hotspot.url">
+		    			
+		    			<label for="urltarget">URL-target:</label>
+						<select class="form-control" ng-model="hotspot.urlTarget" ng-options="urltarget for urltarget in hotspotChoices.urlTarget"><option value="">Default</option></select>	
+						<!-- <input type="text" class="form-control" id="urltarget" placeholder="url target" ng-model="hotspot.urlTarget"> -->
+
+						<label for="overrideclass">Override Class:</label>
+						<input type="text" class="form-control" id="hotspotClass" placeholder="hotspot override class" ng-model="hotspot.hotspotClass">
+					</div>
+				</form>
+			</div>
+
+			<div class="col-md-6">
+				<form class="form-horizontal" role="form">
+					<div class="form-group">
+						<label for="icon">Icon:</label>
+						<!-- Button trigger modal -->
+						<button class="btn btn-primary btn-small" data-toggle="modal" data-target="#myModal">
+						  Choose icon
+						</button>
+						<img src={{hotspot.hotspotIcon}} alt="">
+
+						<input type="text" class="form-control" id="icon" placeholder="hotspot icon" ng-model="hotspot.hotspotIcon">
+
+						<label for="iconalignment">Icon alignment:</label>
+						<select class="form-control" ng-model="hotspot.hotspotAlign" ng-options="opt.value as opt.text for opt in hotspotChoices.hotspotAlign"><option value="">Default</option></select>	
+						<!-- <input type="text" class="form-control" id="iconalign" placeholder="icon alignment" ng-model="hotspot.hotspotAlign"> -->
+						
+						<label for="clickhandler">Custom clickhandler:</label>
+						<input type="text" class="form-control" id="clickexternal" placeholder="function name without () - Example: myfunction(hotspotdata, hotspotdiv){..}" ng-model="hotspot.clickExternal">
+
+						<label for="headtxt">Rollover text:</label>
+						<input type="text" class="form-control" id="headtxt" placeholder="popup text" ng-model="hotspot.headtxt">
+
+
+						
+		    			
+		  			</div>	
+				</form>
+			</div>
+
+			<div class="col-md-12">
+	  			<form class="form-horizontal" role="form">
+					<div class="form-group">
+						<label for="content">Content:</label>
+						<textArea class="form-control" rows="3" id="hotspotcontent" placeholder="Content" ng-model="hotspot.content"></textarea>
+					</div>
+				</form>		
+	   			<button type="button" class="btn btn-success btn-lg btn-block" ng-click="addHotSpot()">Add hotspot</button>
+			</div>
+
+		</div> <!-- end row -->
+
+
+
+		<div class="row">
+			<div class="col-md-6">
+				<h3>Output for HTML</h3>
+				<p>Copy this to a blank html-file.</p>
+
+				<textArea class="form-control" id="hotspot_output" rows="15" placeholder="Hotspots"></textarea>
+				<xmp contenteditable="true" ></xmp>
+			</div>
+
+			<div class="col-md-6">
+				<h3>For use on a Wordpress page</h3>
+
+				<p>
+				- Upload the folder named html5GlobeFiles (found under "WPupload") to the root of your site. (yoursite.xyz/htmlGlobeFiles) <br>
+				- Paste the content of the textarea below, into your wordpress page - make sure you are in text / htmlmode.<br>
+				- You may need to add this to your functions.php (to prevent wordpress from changing your content on save)<br>
+				remove_filter( 'the_content', 'wpautop' );<br>
+				remove_filter( 'the_excerpt', 'wpautop' );<br>
+
+				
+			</p> 
+				<textArea class="form-control" id="hotspot_output_wp" rows="15" placeholder="Hotspots"></textarea>
+				<xmp contenteditable="true" ></xmp>
+			</div>
+
+		</div>
+
+
+
+                           
+
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="myModalLabel">Modal title</h4>
+			</div>
+			<div class="modal-body">
+<img src="textures/hotspotIconsOrange/large_LB.png" alt="hotspotIconsOrange/large_LB.png" data-path="textures/hotspotIconsOrange/large_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/large_LT.png" alt="hotspotIconsOrange/large_LT.png" data-path="textures/hotspotIconsOrange/large_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/large_MB.png" alt="hotspotIconsOrange/large_MB.png" data-path="textures/hotspotIconsOrange/large_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/large_RB.png" alt="hotspotIconsOrange/large_RB.png" data-path="textures/hotspotIconsOrange/large_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/large_RM.png" alt="hotspotIconsOrange/large_RM.png" data-path="textures/hotspotIconsOrange/large_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/large_RT.png" alt="hotspotIconsOrange/large_RT.png" data-path="textures/hotspotIconsOrange/large_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/large_LM.png" alt="hotspotIconsOrange/large_LM.png" data-path="textures/hotspotIconsOrange/large_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/large_MT.png" alt="hotspotIconsOrange/large_MT.png" data-path="textures/hotspotIconsOrange/large_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/medium_LB.png" alt="hotspotIconsOrange/medium_LB.png" data-path="textures/hotspotIconsOrange/medium_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/medium_LM.png" alt="hotspotIconsOrange/medium_LM.png" data-path="textures/hotspotIconsOrange/medium_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/medium_LT.png" alt="hotspotIconsOrange/medium_LT.png" data-path="textures/hotspotIconsOrange/medium_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/medium_MB.png" alt="hotspotIconsOrange/medium_MB.png" data-path="textures/hotspotIconsOrange/medium_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/medium_MT.png" alt="hotspotIconsOrange/medium_MT.png" data-path="textures/hotspotIconsOrange/medium_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/medium_RB.png" alt="hotspotIconsOrange/medium_RB.png" data-path="textures/hotspotIconsOrange/medium_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/medium_RM.png" alt="hotspotIconsOrange/medium_RM.png" data-path="textures/hotspotIconsOrange/medium_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/medium_RT.png" alt="hotspotIconsOrange/medium_RT.png" data-path="textures/hotspotIconsOrange/medium_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/micro_LB.png" alt="hotspotIconsOrange/micro_LB.png" data-path="textures/hotspotIconsOrange/micro_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/micro_LM.png" alt="hotspotIconsOrange/micro_LM.png" data-path="textures/hotspotIconsOrange/micro_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/micro_LT.png" alt="hotspotIconsOrange/micro_LT.png" data-path="textures/hotspotIconsOrange/micro_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/micro_MB.png" alt="hotspotIconsOrange/micro_MB.png" data-path="textures/hotspotIconsOrange/micro_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/micro_MT.png" alt="hotspotIconsOrange/micro_MT.png" data-path="textures/hotspotIconsOrange/micro_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/micro_RB.png" alt="hotspotIconsOrange/micro_RB.png" data-path="textures/hotspotIconsOrange/micro_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/micro_RM.png" alt="hotspotIconsOrange/micro_RM.png" data-path="textures/hotspotIconsOrange/micro_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/micro_RT.png" alt="hotspotIconsOrange/micro_RT.png" data-path="textures/hotspotIconsOrange/micro_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/nano_LB.png" alt="hotspotIconsOrange/nano_LB.png" data-path="textures/hotspotIconsOrange/nano_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/nano_LM.png" alt="hotspotIconsOrange/nano_LM.png" data-path="textures/hotspotIconsOrange/nano_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/nano_LT.png" alt="hotspotIconsOrange/nano_LT.png" data-path="textures/hotspotIconsOrange/nano_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/nano_MB.png" alt="hotspotIconsOrange/nano_MB.png" data-path="textures/hotspotIconsOrange/nano_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/nano_MT.png" alt="hotspotIconsOrange/nano_MT.png" data-path="textures/hotspotIconsOrange/nano_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/nano_RB.png" alt="hotspotIconsOrange/nano_RB.png" data-path="textures/hotspotIconsOrange/nano_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/nano_RM.png" alt="hotspotIconsOrange/nano_RM.png" data-path="textures/hotspotIconsOrange/nano_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/nano_RT.png" alt="hotspotIconsOrange/nano_RT.png" data-path="textures/hotspotIconsOrange/nano_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/small_LB.png" alt="hotspotIconsOrange/small_LB.png" data-path="textures/hotspotIconsOrange/small_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/small_LM.png" alt="hotspotIconsOrange/small_LM.png" data-path="textures/hotspotIconsOrange/small_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/small_LT.png" alt="hotspotIconsOrange/small_LT.png" data-path="textures/hotspotIconsOrange/small_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/small_MB.png" alt="hotspotIconsOrange/small_MB.png" data-path="textures/hotspotIconsOrange/small_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/small_MT.png" alt="hotspotIconsOrange/small_MT.png" data-path="textures/hotspotIconsOrange/small_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/small_RB.png" alt="hotspotIconsOrange/small_RB.png" data-path="textures/hotspotIconsOrange/small_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/small_RM.png" alt="hotspotIconsOrange/small_RM.png" data-path="textures/hotspotIconsOrange/small_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrange/small_RT.png" alt="hotspotIconsOrange/small_RT.png" data-path="textures/hotspotIconsOrange/small_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/large_LB.png" alt="hotspotIconsBlue/large_LB.png" data-path="textures/hotspotIconsBlue/large_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/large_LM.png" alt="hotspotIconsBlue/large_LM.png" data-path="textures/hotspotIconsBlue/large_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/large_LT.png" alt="hotspotIconsBlue/large_LT.png" data-path="textures/hotspotIconsBlue/large_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/large_MB.png" alt="hotspotIconsBlue/large_MB.png" data-path="textures/hotspotIconsBlue/large_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/large_MT.png" alt="hotspotIconsBlue/large_MT.png" data-path="textures/hotspotIconsBlue/large_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/large_RB.png" alt="hotspotIconsBlue/large_RB.png" data-path="textures/hotspotIconsBlue/large_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/large_RM.png" alt="hotspotIconsBlue/large_RM.png" data-path="textures/hotspotIconsBlue/large_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/large_RT.png" alt="hotspotIconsBlue/large_RT.png" data-path="textures/hotspotIconsBlue/large_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/medium_LB.png" alt="hotspotIconsBlue/medium_LB.png" data-path="textures/hotspotIconsBlue/medium_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/medium_LM.png" alt="hotspotIconsBlue/medium_LM.png" data-path="textures/hotspotIconsBlue/medium_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/medium_LT.png" alt="hotspotIconsBlue/medium_LT.png" data-path="textures/hotspotIconsBlue/medium_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/medium_MB.png" alt="hotspotIconsBlue/medium_MB.png" data-path="textures/hotspotIconsBlue/medium_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/medium_MT.png" alt="hotspotIconsBlue/medium_MT.png" data-path="textures/hotspotIconsBlue/medium_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/medium_RB.png" alt="hotspotIconsBlue/medium_RB.png" data-path="textures/hotspotIconsBlue/medium_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/medium_RM.png" alt="hotspotIconsBlue/medium_RM.png" data-path="textures/hotspotIconsBlue/medium_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/medium_RT.png" alt="hotspotIconsBlue/medium_RT.png" data-path="textures/hotspotIconsBlue/medium_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/micro_LB.png" alt="hotspotIconsBlue/micro_LB.png" data-path="textures/hotspotIconsBlue/micro_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/micro_LM.png" alt="hotspotIconsBlue/micro_LM.png" data-path="textures/hotspotIconsBlue/micro_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/micro_LT.png" alt="hotspotIconsBlue/micro_LT.png" data-path="textures/hotspotIconsBlue/micro_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/micro_MB.png" alt="hotspotIconsBlue/micro_MB.png" data-path="textures/hotspotIconsBlue/micro_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/micro_MT.png" alt="hotspotIconsBlue/micro_MT.png" data-path="textures/hotspotIconsBlue/micro_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/micro_RB.png" alt="hotspotIconsBlue/micro_RB.png" data-path="textures/hotspotIconsBlue/micro_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/micro_RM.png" alt="hotspotIconsBlue/micro_RM.png" data-path="textures/hotspotIconsBlue/micro_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/micro_RT.png" alt="hotspotIconsBlue/micro_RT.png" data-path="textures/hotspotIconsBlue/micro_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/nano_LB.png" alt="hotspotIconsBlue/nano_LB.png" data-path="textures/hotspotIconsBlue/nano_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/nano_LM.png" alt="hotspotIconsBlue/nano_LM.png" data-path="textures/hotspotIconsBlue/nano_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/nano_LT.png" alt="hotspotIconsBlue/nano_LT.png" data-path="textures/hotspotIconsBlue/nano_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/nano_MB.png" alt="hotspotIconsBlue/nano_MB.png" data-path="textures/hotspotIconsBlue/nano_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/nano_MT.png" alt="hotspotIconsBlue/nano_MT.png" data-path="textures/hotspotIconsBlue/nano_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/nano_RB.png" alt="hotspotIconsBlue/nano_RB.png" data-path="textures/hotspotIconsBlue/nano_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/nano_RM.png" alt="hotspotIconsBlue/nano_RM.png" data-path="textures/hotspotIconsBlue/nano_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/nano_RT.png" alt="hotspotIconsBlue/nano_RT.png" data-path="textures/hotspotIconsBlue/nano_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/small_LB.png" alt="hotspotIconsBlue/small_LB.png" data-path="textures/hotspotIconsBlue/small_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/small_LM.png" alt="hotspotIconsBlue/small_LM.png" data-path="textures/hotspotIconsBlue/small_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/small_LT.png" alt="hotspotIconsBlue/small_LT.png" data-path="textures/hotspotIconsBlue/small_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/small_MB.png" alt="hotspotIconsBlue/small_MB.png" data-path="textures/hotspotIconsBlue/small_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/small_MT.png" alt="hotspotIconsBlue/small_MT.png" data-path="textures/hotspotIconsBlue/small_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/small_RB.png" alt="hotspotIconsBlue/small_RB.png" data-path="textures/hotspotIconsBlue/small_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/small_RM.png" alt="hotspotIconsBlue/small_RM.png" data-path="textures/hotspotIconsBlue/small_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlue/small_RT.png" alt="hotspotIconsBlue/small_RT.png" data-path="textures/hotspotIconsBlue/small_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/large_LB.png" alt="hotspotIconsBlueFlower/large_LB.png" data-path="textures/hotspotIconsBlueFlower/large_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/large_LM.png" alt="hotspotIconsBlueFlower/large_LM.png" data-path="textures/hotspotIconsBlueFlower/large_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/large_LT.png" alt="hotspotIconsBlueFlower/large_LT.png" data-path="textures/hotspotIconsBlueFlower/large_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/large_MB.png" alt="hotspotIconsBlueFlower/large_MB.png" data-path="textures/hotspotIconsBlueFlower/large_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/large_MT.png" alt="hotspotIconsBlueFlower/large_MT.png" data-path="textures/hotspotIconsBlueFlower/large_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/large_RB.png" alt="hotspotIconsBlueFlower/large_RB.png" data-path="textures/hotspotIconsBlueFlower/large_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/large_RM.png" alt="hotspotIconsBlueFlower/large_RM.png" data-path="textures/hotspotIconsBlueFlower/large_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/large_RT.png" alt="hotspotIconsBlueFlower/large_RT.png" data-path="textures/hotspotIconsBlueFlower/large_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/medium_LB.png" alt="hotspotIconsBlueFlower/medium_LB.png" data-path="textures/hotspotIconsBlueFlower/medium_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/medium_LM.png" alt="hotspotIconsBlueFlower/medium_LM.png" data-path="textures/hotspotIconsBlueFlower/medium_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/medium_LT.png" alt="hotspotIconsBlueFlower/medium_LT.png" data-path="textures/hotspotIconsBlueFlower/medium_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/medium_MB.png" alt="hotspotIconsBlueFlower/medium_MB.png" data-path="textures/hotspotIconsBlueFlower/medium_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/medium_MT.png" alt="hotspotIconsBlueFlower/medium_MT.png" data-path="textures/hotspotIconsBlueFlower/medium_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/medium_RB.png" alt="hotspotIconsBlueFlower/medium_RB.png" data-path="textures/hotspotIconsBlueFlower/medium_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/medium_RM.png" alt="hotspotIconsBlueFlower/medium_RM.png" data-path="textures/hotspotIconsBlueFlower/medium_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/medium_RT.png" alt="hotspotIconsBlueFlower/medium_RT.png" data-path="textures/hotspotIconsBlueFlower/medium_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/micro_LT.png" alt="hotspotIconsBlueFlower/micro_LT.png" data-path="textures/hotspotIconsBlueFlower/micro_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/micro_MB.png" alt="hotspotIconsBlueFlower/micro_MB.png" data-path="textures/hotspotIconsBlueFlower/micro_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/micro_MT.png" alt="hotspotIconsBlueFlower/micro_MT.png" data-path="textures/hotspotIconsBlueFlower/micro_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/micro_RB.png" alt="hotspotIconsBlueFlower/micro_RB.png" data-path="textures/hotspotIconsBlueFlower/micro_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/micro_RT.png" alt="hotspotIconsBlueFlower/micro_RT.png" data-path="textures/hotspotIconsBlueFlower/micro_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/nano_LB.png" alt="hotspotIconsBlueFlower/nano_LB.png" data-path="textures/hotspotIconsBlueFlower/nano_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/nano_LM.png" alt="hotspotIconsBlueFlower/nano_LM.png" data-path="textures/hotspotIconsBlueFlower/nano_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/nano_LT.png" alt="hotspotIconsBlueFlower/nano_LT.png" data-path="textures/hotspotIconsBlueFlower/nano_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/nano_MB.png" alt="hotspotIconsBlueFlower/nano_MB.png" data-path="textures/hotspotIconsBlueFlower/nano_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/nano_MT.png" alt="hotspotIconsBlueFlower/nano_MT.png" data-path="textures/hotspotIconsBlueFlower/nano_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/nano_RB.png" alt="hotspotIconsBlueFlower/nano_RB.png" data-path="textures/hotspotIconsBlueFlower/nano_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/nano_RM.png" alt="hotspotIconsBlueFlower/nano_RM.png" data-path="textures/hotspotIconsBlueFlower/nano_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/nano_RT.png" alt="hotspotIconsBlueFlower/nano_RT.png" data-path="textures/hotspotIconsBlueFlower/nano_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/micro_LB.png" alt="hotspotIconsBlueFlower/micro_LB.png" data-path="textures/hotspotIconsBlueFlower/micro_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/micro_LM.png" alt="hotspotIconsBlueFlower/micro_LM.png" data-path="textures/hotspotIconsBlueFlower/micro_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/micro_RM.png" alt="hotspotIconsBlueFlower/micro_RM.png" data-path="textures/hotspotIconsBlueFlower/micro_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/small_LB.png" alt="hotspotIconsBlueFlower/small_LB.png" data-path="textures/hotspotIconsBlueFlower/small_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/small_LM.png" alt="hotspotIconsBlueFlower/small_LM.png" data-path="textures/hotspotIconsBlueFlower/small_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/small_LT.png" alt="hotspotIconsBlueFlower/small_LT.png" data-path="textures/hotspotIconsBlueFlower/small_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/small_MB.png" alt="hotspotIconsBlueFlower/small_MB.png" data-path="textures/hotspotIconsBlueFlower/small_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/small_MT.png" alt="hotspotIconsBlueFlower/small_MT.png" data-path="textures/hotspotIconsBlueFlower/small_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/small_RB.png" alt="hotspotIconsBlueFlower/small_RB.png" data-path="textures/hotspotIconsBlueFlower/small_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/small_RM.png" alt="hotspotIconsBlueFlower/small_RM.png" data-path="textures/hotspotIconsBlueFlower/small_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsBlueFlower/small_RT.png" alt="hotspotIconsBlueFlower/small_RT.png" data-path="textures/hotspotIconsBlueFlower/small_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/large_LB.png" alt="hotspotIconsGreenFlower/large_LB.png" data-path="textures/hotspotIconsGreenFlower/large_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/large_LM.png" alt="hotspotIconsGreenFlower/large_LM.png" data-path="textures/hotspotIconsGreenFlower/large_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/large_LT.png" alt="hotspotIconsGreenFlower/large_LT.png" data-path="textures/hotspotIconsGreenFlower/large_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/large_MB.png" alt="hotspotIconsGreenFlower/large_MB.png" data-path="textures/hotspotIconsGreenFlower/large_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/large_MT.png" alt="hotspotIconsGreenFlower/large_MT.png" data-path="textures/hotspotIconsGreenFlower/large_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/large_RB.png" alt="hotspotIconsGreenFlower/large_RB.png" data-path="textures/hotspotIconsGreenFlower/large_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/large_RM.png" alt="hotspotIconsGreenFlower/large_RM.png" data-path="textures/hotspotIconsGreenFlower/large_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/large_RT.png" alt="hotspotIconsGreenFlower/large_RT.png" data-path="textures/hotspotIconsGreenFlower/large_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/medium_LB.png" alt="hotspotIconsGreenFlower/medium_LB.png" data-path="textures/hotspotIconsGreenFlower/medium_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/medium_LM.png" alt="hotspotIconsGreenFlower/medium_LM.png" data-path="textures/hotspotIconsGreenFlower/medium_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/medium_LT.png" alt="hotspotIconsGreenFlower/medium_LT.png" data-path="textures/hotspotIconsGreenFlower/medium_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/medium_MB.png" alt="hotspotIconsGreenFlower/medium_MB.png" data-path="textures/hotspotIconsGreenFlower/medium_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/medium_MT.png" alt="hotspotIconsGreenFlower/medium_MT.png" data-path="textures/hotspotIconsGreenFlower/medium_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/medium_RB.png" alt="hotspotIconsGreenFlower/medium_RB.png" data-path="textures/hotspotIconsGreenFlower/medium_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/medium_RM.png" alt="hotspotIconsGreenFlower/medium_RM.png" data-path="textures/hotspotIconsGreenFlower/medium_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/medium_RT.png" alt="hotspotIconsGreenFlower/medium_RT.png" data-path="textures/hotspotIconsGreenFlower/medium_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/micro_LB.png" alt="hotspotIconsGreenFlower/micro_LB.png" data-path="textures/hotspotIconsGreenFlower/micro_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/micro_LM.png" alt="hotspotIconsGreenFlower/micro_LM.png" data-path="textures/hotspotIconsGreenFlower/micro_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/micro_LT.png" alt="hotspotIconsGreenFlower/micro_LT.png" data-path="textures/hotspotIconsGreenFlower/micro_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/micro_MB.png" alt="hotspotIconsGreenFlower/micro_MB.png" data-path="textures/hotspotIconsGreenFlower/micro_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/micro_MT.png" alt="hotspotIconsGreenFlower/micro_MT.png" data-path="textures/hotspotIconsGreenFlower/micro_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/micro_RB.png" alt="hotspotIconsGreenFlower/micro_RB.png" data-path="textures/hotspotIconsGreenFlower/micro_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/micro_RM.png" alt="hotspotIconsGreenFlower/micro_RM.png" data-path="textures/hotspotIconsGreenFlower/micro_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/micro_RT.png" alt="hotspotIconsGreenFlower/micro_RT.png" data-path="textures/hotspotIconsGreenFlower/micro_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/nano_LB.png" alt="hotspotIconsGreenFlower/nano_LB.png" data-path="textures/hotspotIconsGreenFlower/nano_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/nano_LM.png" alt="hotspotIconsGreenFlower/nano_LM.png" data-path="textures/hotspotIconsGreenFlower/nano_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/nano_LT.png" alt="hotspotIconsGreenFlower/nano_LT.png" data-path="textures/hotspotIconsGreenFlower/nano_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/nano_MB.png" alt="hotspotIconsGreenFlower/nano_MB.png" data-path="textures/hotspotIconsGreenFlower/nano_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/nano_MT.png" alt="hotspotIconsGreenFlower/nano_MT.png" data-path="textures/hotspotIconsGreenFlower/nano_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/nano_RB.png" alt="hotspotIconsGreenFlower/nano_RB.png" data-path="textures/hotspotIconsGreenFlower/nano_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/nano_RM.png" alt="hotspotIconsGreenFlower/nano_RM.png" data-path="textures/hotspotIconsGreenFlower/nano_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/nano_RT.png" alt="hotspotIconsGreenFlower/nano_RT.png" data-path="textures/hotspotIconsGreenFlower/nano_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/small_LB.png" alt="hotspotIconsGreenFlower/small_LB.png" data-path="textures/hotspotIconsGreenFlower/small_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/small_LM.png" alt="hotspotIconsGreenFlower/small_LM.png" data-path="textures/hotspotIconsGreenFlower/small_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/small_LT.png" alt="hotspotIconsGreenFlower/small_LT.png" data-path="textures/hotspotIconsGreenFlower/small_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/small_MB.png" alt="hotspotIconsGreenFlower/small_MB.png" data-path="textures/hotspotIconsGreenFlower/small_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/small_MT.png" alt="hotspotIconsGreenFlower/small_MT.png" data-path="textures/hotspotIconsGreenFlower/small_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/small_RB.png" alt="hotspotIconsGreenFlower/small_RB.png" data-path="textures/hotspotIconsGreenFlower/small_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/small_RM.png" alt="hotspotIconsGreenFlower/small_RM.png" data-path="textures/hotspotIconsGreenFlower/small_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenFlower/small_RT.png" alt="hotspotIconsGreenFlower/small_RT.png" data-path="textures/hotspotIconsGreenFlower/small_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/large_LB.png" alt="hotspotIconsOrangeFlower/large_LB.png" data-path="textures/hotspotIconsOrangeFlower/large_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/large_LM.png" alt="hotspotIconsOrangeFlower/large_LM.png" data-path="textures/hotspotIconsOrangeFlower/large_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/large_LT.png" alt="hotspotIconsOrangeFlower/large_LT.png" data-path="textures/hotspotIconsOrangeFlower/large_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/large_MB.png" alt="hotspotIconsOrangeFlower/large_MB.png" data-path="textures/hotspotIconsOrangeFlower/large_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/large_MT.png" alt="hotspotIconsOrangeFlower/large_MT.png" data-path="textures/hotspotIconsOrangeFlower/large_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/large_RB.png" alt="hotspotIconsOrangeFlower/large_RB.png" data-path="textures/hotspotIconsOrangeFlower/large_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/large_RM.png" alt="hotspotIconsOrangeFlower/large_RM.png" data-path="textures/hotspotIconsOrangeFlower/large_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/large_RT.png" alt="hotspotIconsOrangeFlower/large_RT.png" data-path="textures/hotspotIconsOrangeFlower/large_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/medium_LB.png" alt="hotspotIconsOrangeFlower/medium_LB.png" data-path="textures/hotspotIconsOrangeFlower/medium_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/medium_LM.png" alt="hotspotIconsOrangeFlower/medium_LM.png" data-path="textures/hotspotIconsOrangeFlower/medium_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/medium_LT.png" alt="hotspotIconsOrangeFlower/medium_LT.png" data-path="textures/hotspotIconsOrangeFlower/medium_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/medium_MB.png" alt="hotspotIconsOrangeFlower/medium_MB.png" data-path="textures/hotspotIconsOrangeFlower/medium_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/medium_MT.png" alt="hotspotIconsOrangeFlower/medium_MT.png" data-path="textures/hotspotIconsOrangeFlower/medium_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/medium_RB.png" alt="hotspotIconsOrangeFlower/medium_RB.png" data-path="textures/hotspotIconsOrangeFlower/medium_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/medium_RM.png" alt="hotspotIconsOrangeFlower/medium_RM.png" data-path="textures/hotspotIconsOrangeFlower/medium_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/medium_RT.png" alt="hotspotIconsOrangeFlower/medium_RT.png" data-path="textures/hotspotIconsOrangeFlower/medium_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/micro_LB.png" alt="hotspotIconsOrangeFlower/micro_LB.png" data-path="textures/hotspotIconsOrangeFlower/micro_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/micro_LM.png" alt="hotspotIconsOrangeFlower/micro_LM.png" data-path="textures/hotspotIconsOrangeFlower/micro_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/micro_LT.png" alt="hotspotIconsOrangeFlower/micro_LT.png" data-path="textures/hotspotIconsOrangeFlower/micro_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/micro_MB.png" alt="hotspotIconsOrangeFlower/micro_MB.png" data-path="textures/hotspotIconsOrangeFlower/micro_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/micro_MT.png" alt="hotspotIconsOrangeFlower/micro_MT.png" data-path="textures/hotspotIconsOrangeFlower/micro_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/micro_RB.png" alt="hotspotIconsOrangeFlower/micro_RB.png" data-path="textures/hotspotIconsOrangeFlower/micro_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/micro_RM.png" alt="hotspotIconsOrangeFlower/micro_RM.png" data-path="textures/hotspotIconsOrangeFlower/micro_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/micro_RT.png" alt="hotspotIconsOrangeFlower/micro_RT.png" data-path="textures/hotspotIconsOrangeFlower/micro_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/nano_LB.png" alt="hotspotIconsOrangeFlower/nano_LB.png" data-path="textures/hotspotIconsOrangeFlower/nano_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/nano_LM.png" alt="hotspotIconsOrangeFlower/nano_LM.png" data-path="textures/hotspotIconsOrangeFlower/nano_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/nano_LT.png" alt="hotspotIconsOrangeFlower/nano_LT.png" data-path="textures/hotspotIconsOrangeFlower/nano_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/nano_MB.png" alt="hotspotIconsOrangeFlower/nano_MB.png" data-path="textures/hotspotIconsOrangeFlower/nano_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/nano_MT.png" alt="hotspotIconsOrangeFlower/nano_MT.png" data-path="textures/hotspotIconsOrangeFlower/nano_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/nano_RB.png" alt="hotspotIconsOrangeFlower/nano_RB.png" data-path="textures/hotspotIconsOrangeFlower/nano_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/nano_RM.png" alt="hotspotIconsOrangeFlower/nano_RM.png" data-path="textures/hotspotIconsOrangeFlower/nano_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/nano_RT.png" alt="hotspotIconsOrangeFlower/nano_RT.png" data-path="textures/hotspotIconsOrangeFlower/nano_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/small_LB.png" alt="hotspotIconsOrangeFlower/small_LB.png" data-path="textures/hotspotIconsOrangeFlower/small_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/small_LT.png" alt="hotspotIconsOrangeFlower/small_LT.png" data-path="textures/hotspotIconsOrangeFlower/small_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/small_MB.png" alt="hotspotIconsOrangeFlower/small_MB.png" data-path="textures/hotspotIconsOrangeFlower/small_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/small_MT.png" alt="hotspotIconsOrangeFlower/small_MT.png" data-path="textures/hotspotIconsOrangeFlower/small_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/small_RB.png" alt="hotspotIconsOrangeFlower/small_RB.png" data-path="textures/hotspotIconsOrangeFlower/small_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/small_RM.png" alt="hotspotIconsOrangeFlower/small_RM.png" data-path="textures/hotspotIconsOrangeFlower/small_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/small_RT.png" alt="hotspotIconsOrangeFlower/small_RT.png" data-path="textures/hotspotIconsOrangeFlower/small_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeFlower/small_LM.png" alt="hotspotIconsOrangeFlower/small_LM.png" data-path="textures/hotspotIconsOrangeFlower/small_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/large_LB.png" alt="hotspotIconsOrangeBobbles/large_LB.png" data-path="textures/hotspotIconsOrangeBobbles/large_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/large_LM.png" alt="hotspotIconsOrangeBobbles/large_LM.png" data-path="textures/hotspotIconsOrangeBobbles/large_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/large_LT.png" alt="hotspotIconsOrangeBobbles/large_LT.png" data-path="textures/hotspotIconsOrangeBobbles/large_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/large_MB.png" alt="hotspotIconsOrangeBobbles/large_MB.png" data-path="textures/hotspotIconsOrangeBobbles/large_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/large_MT.png" alt="hotspotIconsOrangeBobbles/large_MT.png" data-path="textures/hotspotIconsOrangeBobbles/large_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/large_RB.png" alt="hotspotIconsOrangeBobbles/large_RB.png" data-path="textures/hotspotIconsOrangeBobbles/large_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/large_RM.png" alt="hotspotIconsOrangeBobbles/large_RM.png" data-path="textures/hotspotIconsOrangeBobbles/large_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/large_RT.png" alt="hotspotIconsOrangeBobbles/large_RT.png" data-path="textures/hotspotIconsOrangeBobbles/large_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/medium_LB.png" alt="hotspotIconsOrangeBobbles/medium_LB.png" data-path="textures/hotspotIconsOrangeBobbles/medium_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/medium_LT.png" alt="hotspotIconsOrangeBobbles/medium_LT.png" data-path="textures/hotspotIconsOrangeBobbles/medium_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/medium_MB.png" alt="hotspotIconsOrangeBobbles/medium_MB.png" data-path="textures/hotspotIconsOrangeBobbles/medium_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/medium_RB.png" alt="hotspotIconsOrangeBobbles/medium_RB.png" data-path="textures/hotspotIconsOrangeBobbles/medium_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/medium_RM.png" alt="hotspotIconsOrangeBobbles/medium_RM.png" data-path="textures/hotspotIconsOrangeBobbles/medium_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/medium_RT.png" alt="hotspotIconsOrangeBobbles/medium_RT.png" data-path="textures/hotspotIconsOrangeBobbles/medium_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/medium_LM.png" alt="hotspotIconsOrangeBobbles/medium_LM.png" data-path="textures/hotspotIconsOrangeBobbles/medium_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/medium_MT.png" alt="hotspotIconsOrangeBobbles/medium_MT.png" data-path="textures/hotspotIconsOrangeBobbles/medium_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/micro_LB.png" alt="hotspotIconsOrangeBobbles/micro_LB.png" data-path="textures/hotspotIconsOrangeBobbles/micro_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/micro_LM.png" alt="hotspotIconsOrangeBobbles/micro_LM.png" data-path="textures/hotspotIconsOrangeBobbles/micro_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/micro_LT.png" alt="hotspotIconsOrangeBobbles/micro_LT.png" data-path="textures/hotspotIconsOrangeBobbles/micro_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/micro_MB.png" alt="hotspotIconsOrangeBobbles/micro_MB.png" data-path="textures/hotspotIconsOrangeBobbles/micro_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/micro_MT.png" alt="hotspotIconsOrangeBobbles/micro_MT.png" data-path="textures/hotspotIconsOrangeBobbles/micro_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/micro_RB.png" alt="hotspotIconsOrangeBobbles/micro_RB.png" data-path="textures/hotspotIconsOrangeBobbles/micro_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/micro_RM.png" alt="hotspotIconsOrangeBobbles/micro_RM.png" data-path="textures/hotspotIconsOrangeBobbles/micro_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/micro_RT.png" alt="hotspotIconsOrangeBobbles/micro_RT.png" data-path="textures/hotspotIconsOrangeBobbles/micro_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/nano_LB.png" alt="hotspotIconsOrangeBobbles/nano_LB.png" data-path="textures/hotspotIconsOrangeBobbles/nano_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/nano_LM.png" alt="hotspotIconsOrangeBobbles/nano_LM.png" data-path="textures/hotspotIconsOrangeBobbles/nano_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/nano_LT.png" alt="hotspotIconsOrangeBobbles/nano_LT.png" data-path="textures/hotspotIconsOrangeBobbles/nano_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/nano_MB.png" alt="hotspotIconsOrangeBobbles/nano_MB.png" data-path="textures/hotspotIconsOrangeBobbles/nano_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/nano_MT.png" alt="hotspotIconsOrangeBobbles/nano_MT.png" data-path="textures/hotspotIconsOrangeBobbles/nano_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/nano_RB.png" alt="hotspotIconsOrangeBobbles/nano_RB.png" data-path="textures/hotspotIconsOrangeBobbles/nano_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/nano_RM.png" alt="hotspotIconsOrangeBobbles/nano_RM.png" data-path="textures/hotspotIconsOrangeBobbles/nano_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/nano_RT.png" alt="hotspotIconsOrangeBobbles/nano_RT.png" data-path="textures/hotspotIconsOrangeBobbles/nano_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/small_LB.png" alt="hotspotIconsOrangeBobbles/small_LB.png" data-path="textures/hotspotIconsOrangeBobbles/small_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/small_LM.png" alt="hotspotIconsOrangeBobbles/small_LM.png" data-path="textures/hotspotIconsOrangeBobbles/small_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/small_LT.png" alt="hotspotIconsOrangeBobbles/small_LT.png" data-path="textures/hotspotIconsOrangeBobbles/small_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/small_MB.png" alt="hotspotIconsOrangeBobbles/small_MB.png" data-path="textures/hotspotIconsOrangeBobbles/small_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/small_MT.png" alt="hotspotIconsOrangeBobbles/small_MT.png" data-path="textures/hotspotIconsOrangeBobbles/small_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/small_RB.png" alt="hotspotIconsOrangeBobbles/small_RB.png" data-path="textures/hotspotIconsOrangeBobbles/small_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/small_RM.png" alt="hotspotIconsOrangeBobbles/small_RM.png" data-path="textures/hotspotIconsOrangeBobbles/small_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsOrangeBobbles/small_RT.png" alt="hotspotIconsOrangeBobbles/small_RT.png" data-path="textures/hotspotIconsOrangeBobbles/small_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/large_LB.png" alt="hotspotIconsGreenSquares2/large_LB.png" data-path="textures/hotspotIconsGreenSquares2/large_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/large_LM.png" alt="hotspotIconsGreenSquares2/large_LM.png" data-path="textures/hotspotIconsGreenSquares2/large_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/large_LT.png" alt="hotspotIconsGreenSquares2/large_LT.png" data-path="textures/hotspotIconsGreenSquares2/large_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/large_MB.png" alt="hotspotIconsGreenSquares2/large_MB.png" data-path="textures/hotspotIconsGreenSquares2/large_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/large_MT.png" alt="hotspotIconsGreenSquares2/large_MT.png" data-path="textures/hotspotIconsGreenSquares2/large_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/large_RB.png" alt="hotspotIconsGreenSquares2/large_RB.png" data-path="textures/hotspotIconsGreenSquares2/large_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/large_RM.png" alt="hotspotIconsGreenSquares2/large_RM.png" data-path="textures/hotspotIconsGreenSquares2/large_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/large_RT.png" alt="hotspotIconsGreenSquares2/large_RT.png" data-path="textures/hotspotIconsGreenSquares2/large_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/medium_LB.png" alt="hotspotIconsGreenSquares2/medium_LB.png" data-path="textures/hotspotIconsGreenSquares2/medium_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/medium_LM.png" alt="hotspotIconsGreenSquares2/medium_LM.png" data-path="textures/hotspotIconsGreenSquares2/medium_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/medium_LT.png" alt="hotspotIconsGreenSquares2/medium_LT.png" data-path="textures/hotspotIconsGreenSquares2/medium_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/medium_MB.png" alt="hotspotIconsGreenSquares2/medium_MB.png" data-path="textures/hotspotIconsGreenSquares2/medium_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/medium_MT.png" alt="hotspotIconsGreenSquares2/medium_MT.png" data-path="textures/hotspotIconsGreenSquares2/medium_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/medium_RB.png" alt="hotspotIconsGreenSquares2/medium_RB.png" data-path="textures/hotspotIconsGreenSquares2/medium_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/medium_RM.png" alt="hotspotIconsGreenSquares2/medium_RM.png" data-path="textures/hotspotIconsGreenSquares2/medium_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/medium_RT.png" alt="hotspotIconsGreenSquares2/medium_RT.png" data-path="textures/hotspotIconsGreenSquares2/medium_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/nano_LB.png" alt="hotspotIconsGreenSquares2/nano_LB.png" data-path="textures/hotspotIconsGreenSquares2/nano_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/nano_LM.png" alt="hotspotIconsGreenSquares2/nano_LM.png" data-path="textures/hotspotIconsGreenSquares2/nano_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/nano_LT.png" alt="hotspotIconsGreenSquares2/nano_LT.png" data-path="textures/hotspotIconsGreenSquares2/nano_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/nano_RB.png" alt="hotspotIconsGreenSquares2/nano_RB.png" data-path="textures/hotspotIconsGreenSquares2/nano_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/nano_RM.png" alt="hotspotIconsGreenSquares2/nano_RM.png" data-path="textures/hotspotIconsGreenSquares2/nano_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/nano_RT.png" alt="hotspotIconsGreenSquares2/nano_RT.png" data-path="textures/hotspotIconsGreenSquares2/nano_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/micro_LB.png" alt="hotspotIconsGreenSquares2/micro_LB.png" data-path="textures/hotspotIconsGreenSquares2/micro_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/micro_LM.png" alt="hotspotIconsGreenSquares2/micro_LM.png" data-path="textures/hotspotIconsGreenSquares2/micro_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/micro_LT.png" alt="hotspotIconsGreenSquares2/micro_LT.png" data-path="textures/hotspotIconsGreenSquares2/micro_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/micro_MB.png" alt="hotspotIconsGreenSquares2/micro_MB.png" data-path="textures/hotspotIconsGreenSquares2/micro_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/micro_MT.png" alt="hotspotIconsGreenSquares2/micro_MT.png" data-path="textures/hotspotIconsGreenSquares2/micro_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/micro_RB.png" alt="hotspotIconsGreenSquares2/micro_RB.png" data-path="textures/hotspotIconsGreenSquares2/micro_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/micro_RM.png" alt="hotspotIconsGreenSquares2/micro_RM.png" data-path="textures/hotspotIconsGreenSquares2/micro_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/micro_RT.png" alt="hotspotIconsGreenSquares2/micro_RT.png" data-path="textures/hotspotIconsGreenSquares2/micro_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/nano_MB.png" alt="hotspotIconsGreenSquares2/nano_MB.png" data-path="textures/hotspotIconsGreenSquares2/nano_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/nano_MT.png" alt="hotspotIconsGreenSquares2/nano_MT.png" data-path="textures/hotspotIconsGreenSquares2/nano_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/small_LB.png" alt="hotspotIconsGreenSquares2/small_LB.png" data-path="textures/hotspotIconsGreenSquares2/small_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/small_LM.png" alt="hotspotIconsGreenSquares2/small_LM.png" data-path="textures/hotspotIconsGreenSquares2/small_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/small_LT.png" alt="hotspotIconsGreenSquares2/small_LT.png" data-path="textures/hotspotIconsGreenSquares2/small_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/small_MB.png" alt="hotspotIconsGreenSquares2/small_MB.png" data-path="textures/hotspotIconsGreenSquares2/small_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/small_MT.png" alt="hotspotIconsGreenSquares2/small_MT.png" data-path="textures/hotspotIconsGreenSquares2/small_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/small_RB.png" alt="hotspotIconsGreenSquares2/small_RB.png" data-path="textures/hotspotIconsGreenSquares2/small_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/small_RM.png" alt="hotspotIconsGreenSquares2/small_RM.png" data-path="textures/hotspotIconsGreenSquares2/small_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares2/small_RT.png" alt="hotspotIconsGreenSquares2/small_RT.png" data-path="textures/hotspotIconsGreenSquares2/small_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/large_LB.png" alt="hotspotIconsGreenBobbles/large_LB.png" data-path="textures/hotspotIconsGreenBobbles/large_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/large_LT.png" alt="hotspotIconsGreenBobbles/large_LT.png" data-path="textures/hotspotIconsGreenBobbles/large_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/large_RB.png" alt="hotspotIconsGreenBobbles/large_RB.png" data-path="textures/hotspotIconsGreenBobbles/large_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/large_RM.png" alt="hotspotIconsGreenBobbles/large_RM.png" data-path="textures/hotspotIconsGreenBobbles/large_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/large_RT.png" alt="hotspotIconsGreenBobbles/large_RT.png" data-path="textures/hotspotIconsGreenBobbles/large_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/large_LM.png" alt="hotspotIconsGreenBobbles/large_LM.png" data-path="textures/hotspotIconsGreenBobbles/large_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/large_MB.png" alt="hotspotIconsGreenBobbles/large_MB.png" data-path="textures/hotspotIconsGreenBobbles/large_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/large_MT.png" alt="hotspotIconsGreenBobbles/large_MT.png" data-path="textures/hotspotIconsGreenBobbles/large_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/medium_LB.png" alt="hotspotIconsGreenBobbles/medium_LB.png" data-path="textures/hotspotIconsGreenBobbles/medium_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/medium_LM.png" alt="hotspotIconsGreenBobbles/medium_LM.png" data-path="textures/hotspotIconsGreenBobbles/medium_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/medium_LT.png" alt="hotspotIconsGreenBobbles/medium_LT.png" data-path="textures/hotspotIconsGreenBobbles/medium_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/medium_MB.png" alt="hotspotIconsGreenBobbles/medium_MB.png" data-path="textures/hotspotIconsGreenBobbles/medium_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/medium_MT.png" alt="hotspotIconsGreenBobbles/medium_MT.png" data-path="textures/hotspotIconsGreenBobbles/medium_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/medium_RB.png" alt="hotspotIconsGreenBobbles/medium_RB.png" data-path="textures/hotspotIconsGreenBobbles/medium_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/medium_RM.png" alt="hotspotIconsGreenBobbles/medium_RM.png" data-path="textures/hotspotIconsGreenBobbles/medium_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/medium_RT.png" alt="hotspotIconsGreenBobbles/medium_RT.png" data-path="textures/hotspotIconsGreenBobbles/medium_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/micro_LB.png" alt="hotspotIconsGreenBobbles/micro_LB.png" data-path="textures/hotspotIconsGreenBobbles/micro_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/micro_LM.png" alt="hotspotIconsGreenBobbles/micro_LM.png" data-path="textures/hotspotIconsGreenBobbles/micro_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/micro_LT.png" alt="hotspotIconsGreenBobbles/micro_LT.png" data-path="textures/hotspotIconsGreenBobbles/micro_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/micro_MB.png" alt="hotspotIconsGreenBobbles/micro_MB.png" data-path="textures/hotspotIconsGreenBobbles/micro_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/micro_MT.png" alt="hotspotIconsGreenBobbles/micro_MT.png" data-path="textures/hotspotIconsGreenBobbles/micro_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/micro_RB.png" alt="hotspotIconsGreenBobbles/micro_RB.png" data-path="textures/hotspotIconsGreenBobbles/micro_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/micro_RM.png" alt="hotspotIconsGreenBobbles/micro_RM.png" data-path="textures/hotspotIconsGreenBobbles/micro_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/micro_RT.png" alt="hotspotIconsGreenBobbles/micro_RT.png" data-path="textures/hotspotIconsGreenBobbles/micro_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/nano_LB.png" alt="hotspotIconsGreenBobbles/nano_LB.png" data-path="textures/hotspotIconsGreenBobbles/nano_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/nano_LM.png" alt="hotspotIconsGreenBobbles/nano_LM.png" data-path="textures/hotspotIconsGreenBobbles/nano_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/nano_LT.png" alt="hotspotIconsGreenBobbles/nano_LT.png" data-path="textures/hotspotIconsGreenBobbles/nano_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/nano_MB.png" alt="hotspotIconsGreenBobbles/nano_MB.png" data-path="textures/hotspotIconsGreenBobbles/nano_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/nano_MT.png" alt="hotspotIconsGreenBobbles/nano_MT.png" data-path="textures/hotspotIconsGreenBobbles/nano_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/nano_RB.png" alt="hotspotIconsGreenBobbles/nano_RB.png" data-path="textures/hotspotIconsGreenBobbles/nano_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/nano_RM.png" alt="hotspotIconsGreenBobbles/nano_RM.png" data-path="textures/hotspotIconsGreenBobbles/nano_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/nano_RT.png" alt="hotspotIconsGreenBobbles/nano_RT.png" data-path="textures/hotspotIconsGreenBobbles/nano_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/small_LB.png" alt="hotspotIconsGreenBobbles/small_LB.png" data-path="textures/hotspotIconsGreenBobbles/small_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/small_LM.png" alt="hotspotIconsGreenBobbles/small_LM.png" data-path="textures/hotspotIconsGreenBobbles/small_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/small_LT.png" alt="hotspotIconsGreenBobbles/small_LT.png" data-path="textures/hotspotIconsGreenBobbles/small_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/small_MB.png" alt="hotspotIconsGreenBobbles/small_MB.png" data-path="textures/hotspotIconsGreenBobbles/small_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/small_MT.png" alt="hotspotIconsGreenBobbles/small_MT.png" data-path="textures/hotspotIconsGreenBobbles/small_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/small_RB.png" alt="hotspotIconsGreenBobbles/small_RB.png" data-path="textures/hotspotIconsGreenBobbles/small_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/small_RM.png" alt="hotspotIconsGreenBobbles/small_RM.png" data-path="textures/hotspotIconsGreenBobbles/small_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenBobbles/small_RT.png" alt="hotspotIconsGreenBobbles/small_RT.png" data-path="textures/hotspotIconsGreenBobbles/small_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/large_LB.png" alt="hotspotIconsGreen/large_LB.png" data-path="textures/hotspotIconsGreen/large_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/large_LM.png" alt="hotspotIconsGreen/large_LM.png" data-path="textures/hotspotIconsGreen/large_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/large_LT.png" alt="hotspotIconsGreen/large_LT.png" data-path="textures/hotspotIconsGreen/large_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/large_MB.png" alt="hotspotIconsGreen/large_MB.png" data-path="textures/hotspotIconsGreen/large_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/large_MT.png" alt="hotspotIconsGreen/large_MT.png" data-path="textures/hotspotIconsGreen/large_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/large_RB.png" alt="hotspotIconsGreen/large_RB.png" data-path="textures/hotspotIconsGreen/large_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/large_RM.png" alt="hotspotIconsGreen/large_RM.png" data-path="textures/hotspotIconsGreen/large_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/large_RT.png" alt="hotspotIconsGreen/large_RT.png" data-path="textures/hotspotIconsGreen/large_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/medium_LB.png" alt="hotspotIconsGreen/medium_LB.png" data-path="textures/hotspotIconsGreen/medium_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/medium_LT.png" alt="hotspotIconsGreen/medium_LT.png" data-path="textures/hotspotIconsGreen/medium_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/medium_RB.png" alt="hotspotIconsGreen/medium_RB.png" data-path="textures/hotspotIconsGreen/medium_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/medium_RT.png" alt="hotspotIconsGreen/medium_RT.png" data-path="textures/hotspotIconsGreen/medium_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/medium_LM.png" alt="hotspotIconsGreen/medium_LM.png" data-path="textures/hotspotIconsGreen/medium_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/medium_MB.png" alt="hotspotIconsGreen/medium_MB.png" data-path="textures/hotspotIconsGreen/medium_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/medium_MT.png" alt="hotspotIconsGreen/medium_MT.png" data-path="textures/hotspotIconsGreen/medium_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/medium_RM.png" alt="hotspotIconsGreen/medium_RM.png" data-path="textures/hotspotIconsGreen/medium_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/micro_LB.png" alt="hotspotIconsGreen/micro_LB.png" data-path="textures/hotspotIconsGreen/micro_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/micro_LM.png" alt="hotspotIconsGreen/micro_LM.png" data-path="textures/hotspotIconsGreen/micro_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/micro_LT.png" alt="hotspotIconsGreen/micro_LT.png" data-path="textures/hotspotIconsGreen/micro_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/micro_MB.png" alt="hotspotIconsGreen/micro_MB.png" data-path="textures/hotspotIconsGreen/micro_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/micro_MT.png" alt="hotspotIconsGreen/micro_MT.png" data-path="textures/hotspotIconsGreen/micro_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/micro_RB.png" alt="hotspotIconsGreen/micro_RB.png" data-path="textures/hotspotIconsGreen/micro_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/micro_RM.png" alt="hotspotIconsGreen/micro_RM.png" data-path="textures/hotspotIconsGreen/micro_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/micro_RT.png" alt="hotspotIconsGreen/micro_RT.png" data-path="textures/hotspotIconsGreen/micro_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/nano_LB.png" alt="hotspotIconsGreen/nano_LB.png" data-path="textures/hotspotIconsGreen/nano_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/nano_LM.png" alt="hotspotIconsGreen/nano_LM.png" data-path="textures/hotspotIconsGreen/nano_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/nano_LT.png" alt="hotspotIconsGreen/nano_LT.png" data-path="textures/hotspotIconsGreen/nano_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/nano_MB.png" alt="hotspotIconsGreen/nano_MB.png" data-path="textures/hotspotIconsGreen/nano_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/nano_MT.png" alt="hotspotIconsGreen/nano_MT.png" data-path="textures/hotspotIconsGreen/nano_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/nano_RB.png" alt="hotspotIconsGreen/nano_RB.png" data-path="textures/hotspotIconsGreen/nano_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/nano_RM.png" alt="hotspotIconsGreen/nano_RM.png" data-path="textures/hotspotIconsGreen/nano_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/nano_RT.png" alt="hotspotIconsGreen/nano_RT.png" data-path="textures/hotspotIconsGreen/nano_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/small_LB.png" alt="hotspotIconsGreen/small_LB.png" data-path="textures/hotspotIconsGreen/small_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/small_LM.png" alt="hotspotIconsGreen/small_LM.png" data-path="textures/hotspotIconsGreen/small_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/small_LT.png" alt="hotspotIconsGreen/small_LT.png" data-path="textures/hotspotIconsGreen/small_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/small_MB.png" alt="hotspotIconsGreen/small_MB.png" data-path="textures/hotspotIconsGreen/small_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/small_MT.png" alt="hotspotIconsGreen/small_MT.png" data-path="textures/hotspotIconsGreen/small_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/small_RB.png" alt="hotspotIconsGreen/small_RB.png" data-path="textures/hotspotIconsGreen/small_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/small_RM.png" alt="hotspotIconsGreen/small_RM.png" data-path="textures/hotspotIconsGreen/small_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreen/small_RT.png" alt="hotspotIconsGreen/small_RT.png" data-path="textures/hotspotIconsGreen/small_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/large_LB.png" alt="hotspotIconsGreenSquares1/large_LB.png" data-path="textures/hotspotIconsGreenSquares1/large_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/large_LM.png" alt="hotspotIconsGreenSquares1/large_LM.png" data-path="textures/hotspotIconsGreenSquares1/large_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/large_LT.png" alt="hotspotIconsGreenSquares1/large_LT.png" data-path="textures/hotspotIconsGreenSquares1/large_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/large_MB.png" alt="hotspotIconsGreenSquares1/large_MB.png" data-path="textures/hotspotIconsGreenSquares1/large_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/large_MT.png" alt="hotspotIconsGreenSquares1/large_MT.png" data-path="textures/hotspotIconsGreenSquares1/large_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/large_RB.png" alt="hotspotIconsGreenSquares1/large_RB.png" data-path="textures/hotspotIconsGreenSquares1/large_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/large_RM.png" alt="hotspotIconsGreenSquares1/large_RM.png" data-path="textures/hotspotIconsGreenSquares1/large_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/large_RT.png" alt="hotspotIconsGreenSquares1/large_RT.png" data-path="textures/hotspotIconsGreenSquares1/large_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/medium_LB.png" alt="hotspotIconsGreenSquares1/medium_LB.png" data-path="textures/hotspotIconsGreenSquares1/medium_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/medium_LT.png" alt="hotspotIconsGreenSquares1/medium_LT.png" data-path="textures/hotspotIconsGreenSquares1/medium_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/medium_RB.png" alt="hotspotIconsGreenSquares1/medium_RB.png" data-path="textures/hotspotIconsGreenSquares1/medium_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/medium_RM.png" alt="hotspotIconsGreenSquares1/medium_RM.png" data-path="textures/hotspotIconsGreenSquares1/medium_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/medium_RT.png" alt="hotspotIconsGreenSquares1/medium_RT.png" data-path="textures/hotspotIconsGreenSquares1/medium_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/medium_LM.png" alt="hotspotIconsGreenSquares1/medium_LM.png" data-path="textures/hotspotIconsGreenSquares1/medium_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/medium_MB.png" alt="hotspotIconsGreenSquares1/medium_MB.png" data-path="textures/hotspotIconsGreenSquares1/medium_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/medium_MT.png" alt="hotspotIconsGreenSquares1/medium_MT.png" data-path="textures/hotspotIconsGreenSquares1/medium_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/micro_LB.png" alt="hotspotIconsGreenSquares1/micro_LB.png" data-path="textures/hotspotIconsGreenSquares1/micro_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/micro_LM.png" alt="hotspotIconsGreenSquares1/micro_LM.png" data-path="textures/hotspotIconsGreenSquares1/micro_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/micro_LT.png" alt="hotspotIconsGreenSquares1/micro_LT.png" data-path="textures/hotspotIconsGreenSquares1/micro_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/micro_MB.png" alt="hotspotIconsGreenSquares1/micro_MB.png" data-path="textures/hotspotIconsGreenSquares1/micro_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/micro_MT.png" alt="hotspotIconsGreenSquares1/micro_MT.png" data-path="textures/hotspotIconsGreenSquares1/micro_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/micro_RB.png" alt="hotspotIconsGreenSquares1/micro_RB.png" data-path="textures/hotspotIconsGreenSquares1/micro_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/micro_RM.png" alt="hotspotIconsGreenSquares1/micro_RM.png" data-path="textures/hotspotIconsGreenSquares1/micro_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/micro_RT.png" alt="hotspotIconsGreenSquares1/micro_RT.png" data-path="textures/hotspotIconsGreenSquares1/micro_RT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/small_LB.png" alt="hotspotIconsGreenSquares1/small_LB.png" data-path="textures/hotspotIconsGreenSquares1/small_LB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/small_LM.png" alt="hotspotIconsGreenSquares1/small_LM.png" data-path="textures/hotspotIconsGreenSquares1/small_LM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/small_LT.png" alt="hotspotIconsGreenSquares1/small_LT.png" data-path="textures/hotspotIconsGreenSquares1/small_LT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/small_MB.png" alt="hotspotIconsGreenSquares1/small_MB.png" data-path="textures/hotspotIconsGreenSquares1/small_MB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/small_MT.png" alt="hotspotIconsGreenSquares1/small_MT.png" data-path="textures/hotspotIconsGreenSquares1/small_MT.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/small_RB.png" alt="hotspotIconsGreenSquares1/small_RB.png" data-path="textures/hotspotIconsGreenSquares1/small_RB.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/small_RM.png" alt="hotspotIconsGreenSquares1/small_RM.png" data-path="textures/hotspotIconsGreenSquares1/small_RM.png" ng-click="changeIcon($event, this)">
+<img src="textures/hotspotIconsGreenSquares1/small_RT.png" alt="hotspotIconsGreenSquares1/small_RT.png" data-path="textures/hotspotIconsGreenSquares1/small_RT.png" ng-click="changeIcon($event, this)">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+	</div> <!-- container -->
+		
+
+
+		
+
+	
+
+		<script>
+		/*
+			    function genspots(){
+			    	var count=0
+			    	for (var i = -180; i < 180; i+=10) {
+			    		for (var j = -90; j < 90; j+=10) {
+			    			count++
+			    			//add div
+			    				var d = $('<div/>', {
+          											class: 'hotspot hidden',
+          											"data-long":i,
+          											"data-lat":j
+      							}).appendTo('body');
+			    		};
+			    	};
+			    	console.log(count)
+    			}	
+    		genspots()	
+		*/
+
+			var g = $('div#globeGl_').globe({
+				globeRadius: {val:200},
+				backPlateMargin: {val:10},//defines how far the halo extends from the globe
+				debugMode: {val:false},
+				globeTexture:{val:"textures/earthmap10k.jpg"},
+				autoRotate:{val:false}
+			});
+
+
+		</script>
+
+
+
+</body>
+</html>

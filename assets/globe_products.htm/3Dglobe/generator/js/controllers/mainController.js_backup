@@ -1,0 +1,484 @@
+app.controller("mainController", function($scope, $http, $timeout){
+
+    //setting defaults...(first row in each group)
+    //should work without the 500 ms delay, but it doesnt...
+    $scope.setDefaults = $timeout(function(){
+        $('.table-hover tbody tr:first-child').each(function(e, obj){
+            $(obj).trigger( "click" );
+        })
+
+        //are we connected to the vpn..
+        // $http.get('http://140.150.40.223//cgi-bin//p4816?ENV=envsoco?forc_vare=440148323')
+        //     .success(function(data) {
+        //         console.log(success)
+        //     })
+        //     .error(function(error) {
+        //         console.log(error)
+        //     });
+
+
+    },500);
+
+
+
+
+    $scope.results = [];
+    var selectedObjects = [] //references to selected objects
+
+    //userChoices contains (userchoices) - wich are used to harvest the right number from other arrays
+    var userChoices =['_','_','_','_','_','_','_','_']; // ['main', 'dim_width/height','dim_workheight', 'sidedriveheight', 'sidedrivedirection', 'tapeoverlap', 'tapewidth', 'electric']
+    var userChoicesConverted=['_','_','_','_','_','_']; // ['main','dim','sidedrivedirection','sidedriveheight','disp','electric']
+
+
+    //special values - used where dim/r-k/sidedrives are funneled into 2 ciffers - its the dim values that corresponds to the sidedriveheight / r/k
+    // these arrays also doubles as dimCiffers
+    var mm80r = ['01','03','05','07','09','11','13','15','17','19','21','23','25','27','29','31','33','--','35','37','39','41','43','45','47']
+    var mm80k = ['02','04','06','08','10','12','14','16','18','20','22','24','26','28','30','32','34','--','36','38','40','42','44','46','48']
+    var mm50r = ['51','53','55','57','59','61','63','65','67','69','71','73','75','77','79','81','83','83','85','87','89','91','93','95','97']
+    var mm50k = ['52','54','56','58','60','62','64','66','68','70','72','74','76','78','80','82','84','84','86','88','90','92','94','96','98']
+
+    //Used for funneling machine dimensions
+    var dimList = ['5-5-5','5-8-5','7-5-5','7-8-5','5-5-6','5-8-6','7-5-6','7-8-6','5-5-7','5-8-7','7-5-7','7-8-7','5-5-8','5-8-8','7-5-8','7-8-8','5-5-9','3-5-9','5-8-9','7-5-9','7-8-9','10-5-x','10-8-x','12-5-x','12-8-x']
+    var dimSearchString = ''
+
+    //Used for funneling dispenser tape width and overlap
+    var dispList = ['-','70/50','50/50','70/100','50/100','50/30','50/50/30','70/75','50/75' ]
+    // var dispCiffers = ['0','1','2','3','4','5','6','7','8']
+    var dispSearchString = ''
+
+    //numbersource contains all fragments
+    var numbersource = [
+        /*ciffer_1_5_main =*/ ['43564','43986','44100','44194','44287','46042','47247','48362','47131','43574','43775','46123','44366','44324','46014','46013','46196','44014','46068','46115','46112','46668','44172','45435','44173','45436','46050','43938','43939','43932','43933','46116','46120','48220','48223','48222','XXXXX','48240','45437','48242','45438','48765','83564','83986','84100','84194','84287','86042','87247','88362','87131','83574','83775','86123','84366','84324','86014','86013','86196','84014','86068','86115','86112','86668','84172','85435','84173','85436','86050','83938','83939','83932','83933','86116','86120','88220','88223','88222','8XXXX','88240','85437','88242','85438','88765'],
+        /*ciffer6_7_dim/r-k/sidedrives =*/ [[mm50r, mm50k],[mm80r, mm80k]],
+        /*ciffer_8_disp =*/ ['0','1','2','3','4','5','6','7','8'],
+        /*ciffer_9_electric =*/ ['0','1','2','3','4','5','6','7','8','9']
+    ]
+
+            // numbersource[1][0][2][8] 
+            // c_6_7 = numbersource[1][sidedrevIdx][retkontraIdx][dimIdx]
+            // console.log("generateNumber_fromCombination_"+hovedIdx+'_'+dimIdx+'_'+retkontraIdx+'_'+sidedrevIdx+'_'+dispIdx+'_'+elIdx)
+
+
+    var base = getURLParameter("id");
+    var pricecalc = getURLParameter("pricecalc");
+
+
+    $scope.init = function() {
+
+        $http.get('tmask.json')
+        // $http.jsonp('tmask.json')
+            .success(function(data) {
+                angular.forEach(data.main, function(value, index){
+
+                    var b
+                    if(!base){
+                        b="all" //this because object literal cant be named undefined
+                    }else{
+                        b=base
+                    }
+
+                    if (value[b]){
+                        //the info is subdivided - we only want the part that corresonds to the b parameter
+                        value = value[b]
+                    }
+
+
+                    var filteredValue = {data:[]}
+                    if(index == 0 && b != 'all'){
+                        //we only want the basemachine that corresponds to the id (base) from urlparam
+
+                        filteredValue.txt = value.txt
+                        filteredValue.label = value.label
+
+                        for (var i = 0; i < value.data.length; i++) {
+
+                            if(value.data[i].id == b){
+                                //preserve groupidx
+                                filteredValue.groupidx = 0
+                                filteredValue.data.push(value.data[i])
+                            }
+                        };
+                        
+                        //update value to only include relevant basemachines
+
+                        value = filteredValue;
+                    }
+
+                    // add group idx to each member - used to place the numberfragment in the right place
+                    for (var i = 0; i < value.data.length; i++) {
+                        value.data[i].groupidx = value.groupidx
+                        value.data[i].price = "-"                     
+                    };
+                    
+                    $scope.results.push(value);
+                });
+
+                window.r = $scope.results;
+
+            })
+            .error(function(error) {
+                console.log(error)
+            });
+
+            
+        $scope.output = function () {
+        	console.log("output")
+        	loopCombinations()
+        	// window.open("data:application/octet-stream;charset=utf-8,"+ escape(loopCombinations()));
+        }
+            
+        //info is the main clickhandler for userselections    
+        $scope.info = function (rowindex, obj, event) {
+            //set styling
+            var row = $(event.target).closest("tr")
+            row.addClass("success")
+            row.siblings().removeClass("success")
+
+            //wich group is selected
+            obj.groupidx = parseInt(obj.groupidx)
+            var index = parseInt(obj.idx)
+            //update userChoices array - fragment array contains user choices
+            userChoices[obj.groupidx] = index
+
+            selectedObjects[obj.groupidx] = obj
+
+            var allOk = false
+            //check if all info needed is present
+            for (var i = userChoices.length - 1; i >= 0; i--) {
+                if (userChoices[i] == '_') {
+                	return
+            	}else{
+            		allOk=true;
+                }
+            };
+            
+            if (allOk) {
+                $('.call-to-action').show('fast')
+            	$scope.doOutput()
+            };
+
+
+        }    
+
+        $scope.doOutput = function(){
+            //map values to condensed array
+            userChoicesConverted[0] = userChoices[0]    //main
+            userChoicesConverted[1] = handleDimSplit(selectedObjects[1].searchstring, selectedObjects[2].searchstring)  //dim
+            userChoicesConverted[2] = userChoices[4]    //r/k
+            userChoicesConverted[3] = userChoices[3]    //sidedrive height
+            userChoicesConverted[4] = handleDispSplit(selectedObjects[5].searchstring,selectedObjects[6].searchstring) //disp
+            userChoicesConverted[5] = userChoices[7]    //electric
+            
+            // console.log(userChoices)
+            // console.log(userChoicesConverted)
+            
+
+            $("#info .headtxt").html("Itemnumber: <a href=http://140.150.40.223//cgi-bin//p4816?ENV=envsoco?forc_vare="+$scope.generateNumber() + " target=_blank>" + $scope.generateNumber() + "</a>");
+            if (pricecalc) {
+                //calculate all selected variants
+                calculateSelectedVariants()
+            };
+        }
+
+        //handleDimSplit bridges the gab between the original way of generating itemnumbers and the new userfriendly/logic way
+        //args:selectedObjects[1].searchstring, selectedObjects[2].searchstring
+        function handleDimSplit (searchstringA, searchstringB) {
+
+            //strA = first two digits of machinedim 5-5(-x)
+            var strA = searchstringA
+
+            //strB = last digit of machinedim (x-x-)5
+            var strB = ''
+
+            // handle gaps / inconsistensies in the numbering system
+            // if strA starts with 10 or 12 hardcode strB to x
+            if(strA.substring(0,2) == '10' || strA.substring(0,2) == '12'){
+
+                strB = 'x'
+                // flag string invalid
+                // strB = "***"
+
+            // if strA starts with 3 hardcode strB to 9
+            }else if(strA.substring(0,1) == '3'){
+                
+                strB = '9'
+                // flag string invalid
+                // strB = "***"
+            }else{
+
+                strB = searchstringB
+            }
+
+            //create final string
+            var dimSearchString = strA + '-' + strB
+
+            // find out with index corresponds with the dimSearchString
+            var simDimIdx = $.inArray(dimSearchString, dimList);
+            return simDimIdx
+
+        }
+
+        //handleDispSplit bridges the gab between the original way of generating itemnumbers and the new userfriendly/logic way
+        //args:selectedObjects[5].searchstring,selectedObjects[6].searchstring
+
+        function handleDispSplit (searchstringA, searchstringB) {
+
+            //strA = tapeoverlap
+            var strA = searchstringA
+
+            // strB = tapewidth
+            var strB = searchstringB
+
+            // if strB ends on 30, hardcode strA to 50
+            var checkStr = strB.substring(strB.length-2,strB.length)
+
+            if(checkStr == '30' && strA == '70'){
+                //this should never happen due to new filtering built in
+                strA = "***"
+            }
+            
+            var dispSearchString = ''
+            
+            //if no dispenser is selected in either places 
+            if(strA == '-' || strB == '-'){
+                dispSearchString = '-'
+            }else{
+                dispSearchString = strA + '/' + strB
+            }
+
+
+            //create final string
+            // find out with index corresponds with the dimSearchString
+            var simDispIdx = $.inArray(dispSearchString, dispList);
+            return simDispIdx;           
+ 
+
+        }
+
+        function calculateSelectedVariants (e) {
+            console.log("calculateSelectedVariants")
+            console.log(userChoices)
+
+            // calculate prices for neighboring variations
+            // level0
+            angular.forEach($scope.results[0].data, function(obj, key1){
+                var price = $scope.generatePrice_fromCombination(key1, userChoices[1], userChoices[2], userChoices[3], userChoices[4], userChoices[5])
+                obj.price = price
+            })
+            // level1
+            angular.forEach($scope.results[1].data, function(obj, key1){
+                var price = $scope.generatePrice_fromCombination(userChoices[0], key1, userChoices[2], userChoices[3], userChoices[4], userChoices[5])
+                obj.price = price
+            })
+            // level2
+            angular.forEach($scope.results[2].data, function(obj, key1){
+                var price = $scope.generatePrice_fromCombination(userChoices[0], userChoices[1], key1, userChoices[3], userChoices[4], userChoices[5])
+                obj.price = price
+            })
+            // level3
+            angular.forEach($scope.results[3].data, function(obj, key1){
+                var price = $scope.generatePrice_fromCombination(userChoices[0], userChoices[1], userChoices[2], key1, userChoices[4], userChoices[5])
+                obj.price = price
+            })
+            // level4
+            angular.forEach($scope.results[4].data, function(obj, key1){
+                var price = $scope.generatePrice_fromCombination(userChoices[0], userChoices[1], userChoices[2], userChoices[3], key1, userChoices[5])
+                obj.price = price
+            })
+            // level5
+            angular.forEach($scope.results[5].data, function(obj, key1){
+                var price = $scope.generatePrice_fromCombination(userChoices[0], userChoices[1], userChoices[2], userChoices[3], userChoices[4], key1)
+                obj.price = price
+            })
+        }
+
+        $scope.generatePrice = function(){
+            return($scope.generatePrice_fromCombination(userChoices[0],userChoices[1],userChoices[2],userChoices[3],userChoices[4],userChoices[5]))
+        }
+
+        $scope.generateNumber = function () {
+            return generateNumber_fromCombination(userChoicesConverted[0],userChoicesConverted[1],userChoicesConverted[2],userChoicesConverted[3],userChoicesConverted[4],userChoicesConverted[5])
+        };
+
+        function loopCombinations(){
+            var count = 0
+            var blob = ''
+            angular.forEach($scope.results[0].data, function(v1, key1){
+                angular.forEach($scope.results[1].data, function(v2, key2){
+                    angular.forEach($scope.results[2].data, function(v3, key3){
+                        angular.forEach($scope.results[3].data, function(v4, key4){
+                            angular.forEach($scope.results[4].data, function(v5, key5){
+                                angular.forEach($scope.results[5].data, function(v6, key6){
+                                    angular.forEach($scope.results[6].data, function(v7, key7){
+                                        angular.forEach($scope.results[7].data, function(v8, key8){
+
+                                            // [0]mainIdx
+                                            // [1]casedimIdx
+                                            // [2]workingheightIdx
+                                            // [3]sidedriveheightIdx
+                                            // [4]rkIdx
+                                            // [5]tapeoverlapIdx
+                                            // [6]tapewidth Idx
+                                            // [7]electricIdx
+
+                                            //assign logical names for easier debugging
+                                            var mainIdx = key1
+                                            var casedimIdx = key2
+                                            var workingheightIdx = key3
+                                            var sidedriveheightIdx = key4
+                                            var rkIdx = key5
+                                            var tapeoverlapIdx = key6
+                                            var tapewidthIdx = key7
+                                            var electricIdx = key8
+
+                                            var mainObj = v1
+                                            var casedimObj = v2
+                                            var workingheightObj = v3
+                                            var sidedriveheightObj = v4
+                                            var rkObj = v5
+                                            var tapeoverlapObj = v6
+                                            var tapewidthObj = v7
+                                            var electricObj = v8
+
+
+                                            //handle userfriendly logical split    
+                                            var dimIdx = handleDimSplit(casedimObj.searchstring, workingheightObj.searchstring)
+                                            var dispIdx = handleDispSplit(tapeoverlapObj.searchstring, tapewidthObj.searchstring)
+        
+                                            count += 1;
+                                            var price = 111// $scope.generatePrice_fromCombination(key1, dimIdx, key3, key4, dispIdx, key6)
+
+                                            blob += 
+                                            "Item: " + generateNumber_fromCombination(mainObj.idx, dimIdx, rkIdx, sidedriveheightIdx, dispIdx, electricIdx) + 
+                                            " Price: " + price + 
+                                            " request:" + 
+                                            " (machine:"+ mainIdx + ", " + mainObj.ciffer + ", " + mainObj.type + ", " + mainObj.desc +
+                                            ", casesize:" +casedimObj.dim +
+                                            ", workingheight:" +workingheightObj.dim +
+                                            ", direction:" +rkObj.txt +
+                                            ", sidedriveheight:" +sidedriveheightObj.dim +
+                                            ", tapeoverlap:" + tapeoverlapObj.searchstring +
+                                            ", tapewidth:" + tapewidthObj.searchstring +
+                                            ", electric:" + electricObj.txt + ")" +
+                                            "\n"
+                                        })
+                                    })
+                                })
+                            })
+                        })    
+                    })
+                })
+            })
+            console.log(blob)
+        }
+
+        function generateNumber_fromCombination (hovedIdx, dimIdx, retkontraIdx, sidedrevIdx, dispIdx, elIdx ) {
+            // console.log("generateNumber_fromCombination_"+hovedIdx+'_'+dimIdx+'_'+retkontraIdx+'_'+sidedrevIdx+'_'+dispIdx+'_'+elIdx)
+            c_1_5 = numbersource[0][hovedIdx]
+            c_6_7 = numbersource[1][sidedrevIdx][retkontraIdx][dimIdx]
+            c_8 = numbersource[2][dispIdx]
+            c_9 = numbersource[3][elIdx]
+
+            var _str = c_1_5 + c_6_7 + c_8 + c_9;
+
+            var isValid = _str.indexOf("undefined");
+            
+            if(isValid<=0){
+                return _str;
+            }else{
+                return "Item currently not available, please adjust choices."
+            }
+
+        }
+
+        $scope.generatePrice_fromCombination = function(hovedIdx, dimIdx, retkontraIdx, sidedrevIdx, dispIdx, elIdx){
+        	var baseprice = parseFloat($scope.results[0].data[hovedIdx].cost)
+        	var costfactor = parseFloat($scope.results[1].data[dimIdx].costfactor) + 
+				        	parseFloat($scope.results[2].data[retkontraIdx].costfactor) + 
+				        	parseFloat($scope.results[3].data[sidedrevIdx].costfactor) + 
+				        	parseFloat($scope.results[4].data[dispIdx].costfactor) + 
+				        	parseFloat($scope.results[5].data[elIdx].costfactor)
+
+
+        	var price = baseprice * costfactor + baseprice
+
+        	return price;
+        }
+
+        $scope.onCostChange = function(){
+            $scope.doOutput();
+        }
+
+        window.outputJan = function(){
+            angular.forEach($scope.results, function(v2, key2){
+                angular.forEach(v2.data, function(obj, k){
+                    if(obj.cost){
+                        console.log(obj.cost+"!->")
+                    }else{
+                        console.log(obj.costfactor+"!->")
+                    }
+                    // console.log(obj.data.type+ '_._' + obj.data.cost + obj.data.costfactor )
+                })
+                console.log("__!->")
+            })
+            return "output complete, copy and paste to mail :-)";
+            
+        }
+
+    };
+
+    function getURLParameter(name) {
+        return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+    }
+
+    $scope.addToList = function(){
+        window.parent.addToList(base, $scope.generateNumber())        
+    }
+
+    $scope.addToCart = function(){
+        window.parent.addToCart(base, $scope.generateNumber())        
+    }
+
+    $scope.baseFilter = function(item){
+        //No longer used, the filtering is handled during initial loop, on json.success
+        //used to filter based on ?id url param. if no value show all
+        if(!base) return true;
+        return item.id == base
+
+    }
+
+    $scope.tapeOverlapFilter = function(item){
+        //used to filter tapeoverlap
+        var fa = item.filter
+        var fb = selectedObjects[6]
+
+        if(fb){
+
+            fb = fb.filter
+            if(fa != fb){
+
+                return true
+            }else{
+
+                return false
+            }
+        }
+
+        return true
+    }
+
+    $scope.tapeWidthFilter = function(item){
+        //used to filter tapewidths
+        var fa = item.filter
+        var fb = selectedObjects[5]
+
+        if(fb){
+
+            fb = fb.filter
+            return (fa != fb)
+        }
+
+        return true
+    }
+
+});
