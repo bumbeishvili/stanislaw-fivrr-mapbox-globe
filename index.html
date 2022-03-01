@@ -20,6 +20,12 @@
     <script src="scripts/d3chart.js"></script>
 
     <script>
+
+        d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQmL9hNibI9OGDwx0CG1pfops0uJj7VN9lnQUbsrfyQjZxNYTENc_G2nW4yB4IBrtMBboR-N-eZZ2JG/pub?output=csv").then((dataset) => {
+  console.log({ dataset })
+
+           
+        })
         let chart;
         d3.json('data/data.json')
             .then(data => {
