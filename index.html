@@ -1,43 +1,60 @@
 <!DOCTYPE html>
 
 <html>
-
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Chart</title>
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="styles/index.css" />
-</head>
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/mapbox-gl@2.7.0-alpha.1/dist/mapbox-gl.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        </style>
+  </head>
 
-<body translate="no">
-
+  <body translate="no">
     <div class="page-container">
-        <div id="graph-container"></div>
+      <div id="graph-container"></div>
     </div>
 
     <script src="libs/d3.v7.min.js"></script>
     <script src="scripts/d3chart.js"></script>
+    <div id="map"></div>
 
     <script>
-
-        d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQmL9hNibI9OGDwx0CG1pfops0uJj7VN9lnQUbsrfyQjZxNYTENc_G2nW4yB4IBrtMBboR-N-eZZ2JG/pub?output=csv").then((dataset) => {
-  console.log({ dataset })
-
-           
-        })
-        let chart;
-        d3.json('data/data.json')
-            .then(data => {
-                chart = new Chart()
-                    .svgHeight(window.innerHeight - 30)
-                    .svgWidth(window.innerWidth - 30)
-                    .container('#graph-container')
-                    .data(data)
-                    .render()
-            })
+      mapboxgl.accessToken =
+        "pk.eyJ1Ijoia2F0YW1hcmFuaTQiLCJhIjoiY2ppNDdtenh5MDFkYTN2b2VjOG5ucmIybCJ9.AG0bncC30hHPHVRnVGeCxQ";
+      const map = new mapboxgl.Map({
+        container: "map",
+        style: "mapbox://styles/mapbox/streets-v11",
+        center: [0, 0],
+        zoom: 0.6,
+        projection: "globe", // starting projection
+      });
     </script>
 
-</body>
-
+    <script>
+      d3.csv(
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmL9hNibI9OGDwx0CG1pfops0uJj7VN9lnQUbsrfyQjZxNYTENc_G2nW4yB4IBrtMBboR-N-eZZ2JG/pub?output=csv"
+      ).then((dataset) => {
+        console.log({ dataset });
+      });
+      //   let chart;
+      //   d3.json("data/data.json").then((data) => {
+      //     chart = new Chart()
+      //       .svgHeight(window.innerHeight - 30)
+      //       .svgWidth(window.innerWidth - 30)
+      //       .container("#graph-container")
+      //       .data(data)
+      //       .render();
+      //   });
+      //
+    </script>
+  </body>
 </html>
