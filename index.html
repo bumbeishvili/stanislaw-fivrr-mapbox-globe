@@ -3,58 +3,148 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Chart</title>
+    <title>Globe</title>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="styles/index.css" />
     <link
       href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css"
       rel="stylesheet"
     />
     <script src="https://unpkg.com/mapbox-gl@2.7.0-alpha.1/dist/mapbox-gl.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
     <style>
-        body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        </style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+    </style>
   </head>
 
   <body translate="no">
-    <div class="page-container">
-      <div id="graph-container"></div>
-    </div>
-
-    <script src="libs/d3.v7.min.js"></script>
-    <script src="scripts/d3chart.js"></script>
     <div id="map"></div>
 
     <script>
+      let data = null;
+      let options = null;
       mapboxgl.accessToken =
         "pk.eyJ1Ijoia2F0YW1hcmFuaTQiLCJhIjoiY2ppNDdtenh5MDFkYTN2b2VjOG5ucmIybCJ9.AG0bncC30hHPHVRnVGeCxQ";
+
       const map = new mapboxgl.Map({
         container: "map",
         style: "mapbox://styles/mapbox/streets-v11",
-        center: [0, 0],
-        zoom: 0.6,
+        center: [-81, 30],
+        zoom: 1.5,
         projection: "globe", // starting projection
       });
-    </script>
 
-    <script>
-      d3.csv(
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmL9hNibI9OGDwx0CG1pfops0uJj7VN9lnQUbsrfyQjZxNYTENc_G2nW4yB4IBrtMBboR-N-eZZ2JG/pub?output=csv"
-      ).then((dataset) => {
-        console.log({ dataset });
+      const mapLoaderPromise = new Promise((resolve, reject) => {
+        map.on("load", () => {
+          resolve(map);
+        });
       });
-      //   let chart;
-      //   d3.json("data/data.json").then((data) => {
-      //     chart = new Chart()
-      //       .svgHeight(window.innerHeight - 30)
-      //       .svgWidth(window.innerWidth - 30)
-      //       .container("#graph-container")
-      //       .data(data)
-      //       .render();
-      //   });
-      //
+
+      Promise.all([
+        d3.csv(
+          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmL9hNibI9OGDwx0CG1pfops0uJj7VN9lnQUbsrfyQjZxNYTENc_G2nW4yB4IBrtMBboR-N-eZZ2JG/pub?output=csv"
+        ),
+        d3.csv(
+          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmL9hNibI9OGDwx0CG1pfops0uJj7VN9lnQUbsrfyQjZxNYTENc_G2nW4yB4IBrtMBboR-N-eZZ2JG/pub?gid=1423471266&single=true&output=csv"
+        ),
+        mapLoaderPromise,
+      ]).then(([data, options, map]) => {
+        console.log(data, options, map);
+        renderMap(
+          [
+            {
+              imageUrl: "https://docs.mapbox.com/mapbox-gl-js/assets/cat.png",
+              lat: -77.4144,
+              lng: 25.0759,
+            },
+          ],
+          options,
+          map
+        );
+      });
+
+      function renderMap(data, options, map) {
+        removeAllImages();
+        let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
+        let imgPromisesArray = allImageUrls.map(
+          (url) =>
+            new Promise((resolve, reject) =>
+              map.loadImage(url, (error, image) => {
+                resolve({ image: image, name: url });
+              })
+            )
+        );
+
+        Promise.all(imgPromisesArray).then((imageObjects) => {
+          const geojson = convertDataToGeojson(data);
+          console.log("got geojson", geojson);
+
+          console.log(imageObjects);
+          imageObjects.forEach((imgObj) => {
+            map.addImage(imgObj.name, imgObj.image);
+            console.log("added", imgObj);
+          });
+
+          addImagesToMap(geojson, map);
+        });
+      }
+
+      function convertDataToGeojson(data) {
+        let geojson = {
+          type: "FeatureCollection",
+          features: [],
+        };
+        data.forEach((d) => {
+          let feature = {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [d.lat, d.lng],
+            },
+            properties: d,
+          };
+          geojson.features.push(feature);
+        });
+        return geojson;
+      }
+
+      function addImagesToMap(geojson, map) {
+        // Add a data source containing one point feature.
+        map.addSource("pointsSource", {
+          type: "geojson",
+          data: geojson,
+        });
+
+        // Add a layer to use the image to represent the data.
+        map.addLayer({
+          id: "pointsLayer",
+          type: "symbol",
+          source: "pointsSource", // reference the data source
+          layout: {
+            "icon-image": ["get", "imageUrl"], // reference the image
+            "icon-size": 0.25,
+          },
+        });
+      }
+
+      function removeAllImages(map) {
+        // Remove sources
+        // Remove layers
+      }
+
+      function onFilter(data) {
+        // Remove all images
+        // Add images for data
+      }
     </script>
   </body>
 </html>
