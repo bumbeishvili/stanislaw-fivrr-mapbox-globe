@@ -59,14 +59,10 @@
         mapLoaderPromise,
       ]).then(([data, options, map]) => {
         console.log(data, options, map);
+data.forEach(d=>d.imageUrl="./assets/"+d.hotspoticon)
+console.log(data)
         renderMap(
-          [
-            {
-              imageUrl: "https://docs.mapbox.com/mapbox-gl-js/assets/cat.png",
-              lat: -77.4144,
-              lng: 25.0759,
-            },
-          ],
+          data,
           options,
           map
         );
@@ -98,6 +94,7 @@
         });
       }
 
+
       function convertDataToGeojson(data) {
         let geojson = {
           type: "FeatureCollection",
@@ -108,7 +105,7 @@
             type: "Feature",
             geometry: {
               type: "Point",
-              coordinates: [d.lat, d.lng],
+              coordinates: [d.lat, d.long],
             },
             properties: d,
           };
