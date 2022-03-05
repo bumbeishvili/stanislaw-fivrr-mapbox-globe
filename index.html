@@ -105,7 +105,7 @@ console.log(data)
             type: "Feature",
             geometry: {
               type: "Point",
-              coordinates: [d.lat, d.long],
+              coordinates: [d.long, d.lat],
             },
             properties: d,
           };
@@ -128,7 +128,8 @@ console.log(data)
           source: "pointsSource", // reference the data source
           layout: {
             "icon-image": ["get", "imageUrl"], // reference the image
-            "icon-size": 0.25,
+            "icon-size": 2,
+            "icon-allow-overlap":true,
           },
         });
       }
