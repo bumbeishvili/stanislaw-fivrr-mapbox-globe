@@ -59,7 +59,9 @@
         mapLoaderPromise,
       ]).then(([data, options, map]) => {
         console.log(data, options, map);
-data.forEach(d=>d.imageUrl="./assets/"+d.hotspoticon)
+data.forEach(d=>d.imageUrl="./assets/"+d.hotspoticon);
+data.forEach(d=>d.description='<p>'+d.headtxt+'</p>');
+
 console.log(data)
         renderMap(
           data,
@@ -124,14 +126,61 @@ console.log(data)
         // Add a layer to use the image to represent the data.
         map.addLayer({
           id: "pointsLayer",
-          type: "symbol",
+          type: "circle",//"symbol",
           source: "pointsSource", // reference the data source
-          layout: {
+        /*  layout: {
             "icon-image": ["get", "imageUrl"], // reference the image
             "icon-size": 2,
             "icon-allow-overlap":true,
-          },
+          },*/
+          "paint": {
+      "circle-color": "blue",
+      "circle-radius":15
+    }
         });
+
+        const popup = new mapboxgl.Popup({
+closeButton: false,
+closeOnClick: false,
+});
+ 
+map.on('mouseenter', 'pointsLayer', (e) => {
+// Change the cursor style as a UI indicator.
+map.getCanvas().style.cursor = 'pointer';
+ 
+ console.log(e);
+// Copy coordinates array.
+const coordinates = /*[e.originalEvent.clientX,e.originalEvent.clientY]*/e.features[0].geometry.coordinates.slice();
+const description = e.features[0].properties.description;
+ 
+ console.log({coordinates})
+
+
+// Ensure that if the map is zoomed out such that multiple
+// copies of the feature are visible, the popup appears
+// over the copy being pointed to.
+while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+}
+ 
+// Populate the popup and set its coordinates
+// based on the feature found.
+popup.setLngLat(coordinates).setHTML(description).addTo(map);
+});
+ 
+map.on('mouseleave', 'pointsLayer', () => {
+map.getCanvas().style.cursor = '';
+popup.remove();
+});
+
+map.on('mousedown', 'pointsLayer', () => {
+popup.remove();
+});
+
+map.on('click', 'pointsLayer', (e) => {
+    window.open(e.features[0].properties.url,'_blank');
+
+});
       }
 
       function removeAllImages(map) {
