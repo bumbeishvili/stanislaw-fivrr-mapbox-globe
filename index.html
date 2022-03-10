@@ -59,20 +59,16 @@
         mapLoaderPromise,
       ]).then(([data, options, map]) => {
         console.log(data, options, map);
-data.forEach(d=>d.imageUrl="./assets/"+d.hotspoticon);
-data.forEach(d=>d.description='<p>'+d.headtxt+'</p>');
+        data.forEach((d) => (d.imageUrl = "./assets/" + d.hotspoticon));
+        data.forEach((d) => (d.description = "<p>" + d.headtxt + "</p>"));
 
-console.log(data)
-        renderMap(
-          data,
-          options,
-          map
-        );
+        console.log(data);
+        renderMap(data, options, map);
       });
 
       function renderMap(data, options, map) {
         removeAllImages();
-        let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
+        /*  let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
         let imgPromisesArray = allImageUrls.map(
           (url) =>
             new Promise((resolve, reject) =>
@@ -80,22 +76,21 @@ console.log(data)
                 resolve({ image: image, name: url });
               })
             )
-        );
+        );*/
 
-        Promise.all(imgPromisesArray).then((imageObjects) => {
-          const geojson = convertDataToGeojson(data);
-          console.log("got geojson", geojson);
+        //   Promise.all(imgPromisesArray).then((imageObjects) => {
+        const geojson = convertDataToGeojson(data);
+        console.log("got geojson", geojson);
 
-          console.log(imageObjects);
+        /*    console.log(imageObjects);
           imageObjects.forEach((imgObj) => {
             map.addImage(imgObj.name, imgObj.image);
             console.log("added", imgObj);
-          });
+          });*/
 
-          addImagesToMap(geojson, map);
-        });
+        addImagesToMap(geojson, map);
+        //   });
       }
-
 
       function convertDataToGeojson(data) {
         let geojson = {
@@ -124,63 +119,72 @@ console.log(data)
         });
 
         // Add a layer to use the image to represent the data.
-        map.addLayer({
+        /*    map.addLayer({
           id: "pointsLayer",
           type: "circle",//"symbol",
           source: "pointsSource", // reference the data source
-        /*  layout: {
+         layout: {
             "icon-image": ["get", "imageUrl"], // reference the image
             "icon-size": 2,
             "icon-allow-overlap":true,
-          },*/
-          "paint": {
+          },
+        paint: {
       "circle-color": "blue",
       "circle-radius":15
     }
+        });*/
+        map.addLayer({
+          id: "pointsLayer",
+          type: "circle",
+          source: "pointsSource",
+          paint: {
+            "circle-color": "#4264fb",
+            "circle-radius": 80,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff",
+          },
         });
 
         const popup = new mapboxgl.Popup({
-closeButton: false,
-closeOnClick: false,
-});
- 
-map.on('mouseenter', 'pointsLayer', (e) => {
-// Change the cursor style as a UI indicator.
-map.getCanvas().style.cursor = 'pointer';
- 
- console.log(e);
-// Copy coordinates array.
-const coordinates = /*[e.originalEvent.clientX,e.originalEvent.clientY]*/e.features[0].geometry.coordinates.slice();
-const description = e.features[0].properties.description;
- 
- console.log({coordinates})
+          closeButton: false,
+          closeOnClick: false,
+        });
 
+        map.on("mouseenter", "pointsLayer", (e) => {
+          // Change the cursor style as a UI indicator.
+          map.getCanvas().style.cursor = "pointer";
 
-// Ensure that if the map is zoomed out such that multiple
-// copies of the feature are visible, the popup appears
-// over the copy being pointed to.
-while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-}
- 
-// Populate the popup and set its coordinates
-// based on the feature found.
-popup.setLngLat(coordinates).setHTML(description).addTo(map);
-});
- 
-map.on('mouseleave', 'pointsLayer', () => {
-map.getCanvas().style.cursor = '';
-popup.remove();
-});
+          console.log(e);
+          // Copy coordinates array.
+          const coordinates =e.features[0].geometry.coordinates.slice();
+          const description = e.features[0].properties.description;
 
-map.on('mousedown', 'pointsLayer', () => {
-popup.remove();
-});
+          console.log({ coordinates });
 
-map.on('click', 'pointsLayer', (e) => {
-    window.open(e.features[0].properties.url,'_blank');
+          // Ensure that if the map is zoomed out such that multiple
+          // copies of the feature are visible, the popup appears
+          // over the copy being pointed to.
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
 
-});
+          // Populate the popup and set its coordinates
+          // based on the feature found.
+          popup.setLngLat(coordinates).setHTML(description).addTo(map);
+        });
+
+        map.on("mouseleave", "pointsLayer", () => {
+          map.getCanvas().style.cursor = "";
+          popup.remove();
+        });
+
+        map.on("mousedown", "pointsLayer", () => {
+          popup.remove();
+        });
+
+        map.on("click", "pointsLayer", (e) => {
+          window.open(e.features[0].properties.url, "_blank");
+        });
       }
 
       function removeAllImages(map) {
