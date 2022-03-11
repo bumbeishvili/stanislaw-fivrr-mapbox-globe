@@ -64,8 +64,17 @@
 
         console.log(data);
         renderMap(data, options, map);
+        addButtons(options);
       });
-
+      function addButtons(options) {
+        d3.select(".mapboxgl-ctrl-top-left")
+          .append("circle")
+          .attr("cx", 100)
+          .attr("cy", 70)
+          .attr("stroke", "black")
+          .style("fill", "yellow")
+          .attr("r", 20);
+      }
       function renderMap(data, options, map) {
         removeAllImages();
         /*  let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
@@ -116,6 +125,7 @@
         map.addSource("pointsSource", {
           type: "geojson",
           data: geojson,
+          maxzoom: 7,
         });
 
         // Add a layer to use the image to represent the data.
@@ -143,6 +153,10 @@
             "circle-stroke-width": 2,
             "circle-stroke-color": "#ffffff",
           },
+          /*    layout: {
+           "minzoom": 0,
+            "maxzoom": 24,
+          },*/
         });
 
         const popup = new mapboxgl.Popup({
@@ -156,7 +170,7 @@
 
           console.log(e);
           // Copy coordinates array.
-          const coordinates =e.features[0].geometry.coordinates.slice();
+          const coordinates = e.features[0].geometry.coordinates.slice();
           const description = e.features[0].properties.description;
 
           console.log({ coordinates });
