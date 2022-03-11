@@ -23,11 +23,18 @@
         bottom: 0;
         width: 100%;
       }
+      .filters-container{
+          position: absolute;
+          width:200px;
+          height: 100px;
+          z-index: 1;
+      }
     </style>
   </head>
 
   <body translate="no">
     <div id="map"></div>
+    <div class="filters-container"></div>
 
     <script>
       let data = null;
@@ -67,10 +74,10 @@
         addButtons(options);
       });
       function addButtons(options) {
-        d3.select(".mapboxgl-ctrl-top-left")
+        d3.select(".filters-container")
           .append("circle")
           .attr("cx", 100)
-          .attr("cy", 70)
+          .attr("cy", 50)
           .attr("stroke", "black")
           .style("fill", "yellow")
           .attr("r", 20);
