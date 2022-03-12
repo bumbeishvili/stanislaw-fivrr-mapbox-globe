@@ -23,33 +23,44 @@
         bottom: 0;
         width: 100%;
       }
-      .filters-container{
-          position: absolute;
-          display:flex;
-          flex-direction: row;
-          width:200px;
-          height: 100px;
-          z-index: 1;
+      .filters-container {
+        position: absolute;
+        display: flex;
+        flex-direction: row;
+        width: 200px;
+        height: 100px;
+        z-index: 1;
       }
-   .buttons-text{
-       margin:15px;
-    display:flex;
-          flex-direction: row;  
-          color:#144d8f;
-          font-size: 20px;
-          font-weight: 500;
-          cursor: pointer;
-   }
-   .button{
-       margin-right:7px;
-       background:#144d8f;
-   }
-   .active .button{
-       background:#18bfd9;
-   }
-   .active .text{
-       color:#18bfd9;
-   }
+      .buttons-text {
+        margin: 15px;
+        display: flex;
+        flex-direction: row;
+        color: #0dccea;
+        font-size: 20px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      /* CSS */
+      .button-70 {
+        background-image: linear-gradient(#0dccea, #0d70ea);
+        border: 0;
+        border-radius: 4px;
+        box-shadow: rgba(0, 0, 0, 0.3) 0 5px 15px;
+        box-sizing: border-box;
+        color: #fff;
+        cursor: pointer;
+        font-family: Montserrat, sans-serif;
+        font-size: 0.9em;
+        margin: 5px;
+        padding: 10px 15px;
+        text-align: center;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+      }
+      .active .button-70 {
+        background-image: linear-gradient(#0d70ea, #144d8f);
+      }
     </style>
   </head>
 
@@ -91,36 +102,45 @@
         data.forEach((d) => (d.description = "<p>" + d.headtxt + "</p>"));
 
         console.log(data);
-        renderMap(data, options, map);
-        addButtons(options,data);
+        renderMap(data, map);
+        addButtons(options, data);
       });
-      function addButtons(options,data) {
-          var filteredData;
-      var buttons= d3.select(".filters-container")
-        .selectAll("div")
-        .data(options)
-        .enter()
+      function addButtons(options, data) {
+        var filteredData = [];
+        var buttons = d3
+          .select(".filters-container")
+          .selectAll("div")
+          .data(options)
+          .enter()
           .append("div")
-          .html((d,i)=>
-        `<div class="buttons-text"> <button class="button" style="width:20px;height:20px; "></button><div class="text">${d.name}</div></div>`
+          .html(
+            (d, i) =>
+              `<div class="buttons-text"> <button class="button-70" style="width:20px;height:20px; "></button><div class="text">${d.name}</div></div>`
           )
-      .on("click",function(d,i){
- filteredData=data.filter(function(element){ console.log(element[i.column]);
-     return element[i.column]==i.value})
-     d3.selectAll("div")
-     .classed("active",false)
+          .on("click", function (d, i) {
+            let currentFilteredData = data.filter(function (element) {
+              return element[i.column] == i.value;
+            });
 
-     d3.select(this)
-     .classed("active",true)
-     console.log(filteredData)
-
-      })
-     // .append("text")
-      //.text("Sssss");
+            if (d3.select(this).classed("active")) {
+              d3.select(this).classed("active", false);
+              filteredData = filteredData.filter(
+                (el) => !currentFilteredData.includes(el)
+              );
+            } else {
+              d3.select(this).classed("active", true);
+              filteredData = filteredData.concat(currentFilteredData);
+            }
+            if (filteredData.length == 0) {
+              filteredData = data;
+            }
+            console.log(filteredData);
+            renderMap(filteredData, map)
+          });
+   
       }
-      function renderMap(data, options, map) {
-        removeAllImages();
-        /*  let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
+      function renderMap(data, map) {
+        removeLayersAndSources();        /*  let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
         let imgPromisesArray = allImageUrls.map(
           (url) =>
             new Promise((resolve, reject) =>
@@ -244,7 +264,9 @@
         });
       }
 
-      function removeAllImages(map) {
+      function removeLayersAndSources(map) {
+d3.select("#pointsLayer").remove()
+d3.select("#pointsSource").remove()
         // Remove sources
         // Remove layers
       }
