@@ -23,19 +23,54 @@
         bottom: 0;
         width: 100%;
       }
-      .filters-container {
+      .filter-tooltip {
         position: absolute;
+        width: 100%;
         display: flex;
         flex-direction: row;
-        width: 200px;
+      }
+      .tooltip-container {
+        display: none;
+        width: 40%;
         height: 100px;
-        z-index: 1;
+        border-radius: 15px;
+      }
+      .tooltip-div {
+          margin:5px;
+        height: 100%;
+      }
+      .tooltip-html {
+        border-radius: 10px;
+
+        height: 100%;
+        font-size: 20px;
+        color:#06044f;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        background: #63b7f2;
+      }
+      .tooltip-name {
+        text-align: center;
+        margin-left: 10px;
+        margin-right: 10px;
+      }
+      .tooltip-image {
+        margin-left: 10px;
+        margin-right: 10px;
+      }
+      .filters-container {
+        display: flex;
+        flex-direction: row;
+        width: 60%;
+        height: 100px;
       }
       .buttons-text {
         margin: 15px;
         display: flex;
         flex-direction: row;
-        color: #0dccea;
+        color:#06044f;
         font-size: 20px;
         font-weight: 500;
         cursor: pointer;
@@ -66,8 +101,10 @@
 
   <body translate="no">
     <div id="map"></div>
-    <div class="filters-container"></div>
-
+    <div class="filter-tooltip">
+      <div class="filters-container"></div>
+      <div class="tooltip-container"></div>
+    </div>
     <script>
       let data = null;
       let options = null;
@@ -79,7 +116,7 @@
         style: "mapbox://styles/mapbox/streets-v11",
         center: [-81, 30],
         zoom: 1.5,
-        projection: "globe", // starting projection
+        //  projection: "globe", // starting projection
       });
 
       const mapLoaderPromise = new Promise((resolve, reject) => {
@@ -104,6 +141,7 @@
         console.log(data);
         renderMap(data, map);
         addButtons(options, data);
+        addTooltip(options);
       });
       function addButtons(options, data) {
         var filteredData = [];
@@ -121,7 +159,9 @@
             let currentFilteredData = data.filter(function (element) {
               return element[i.column] == i.value;
             });
-
+            if (filteredData.length == 81) {
+              filteredData = [];
+            }
             if (d3.select(this).classed("active")) {
               d3.select(this).classed("active", false);
               filteredData = filteredData.filter(
@@ -135,12 +175,22 @@
               filteredData = data;
             }
             console.log(filteredData);
-            renderMap(filteredData, map)
+            renderMap(filteredData, map);
           });
-   
+      }
+
+      function addTooltip(options) {
+        d3.select(".tooltip-container")
+          .append("div")
+          .attr("class", "tooltip-div")
+          .html(
+            `<div class="tooltip-html" style="width:200px;height:200px; "> some </div>`
+          );
       }
       function renderMap(data, map) {
-        removeLayersAndSources();        /*  let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
+        removeLayersAndSources(
+          map
+        ); /*  let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
         let imgPromisesArray = allImageUrls.map(
           (url) =>
             new Promise((resolve, reject) =>
@@ -212,7 +262,7 @@
           source: "pointsSource",
           paint: {
             "circle-color": "#4264fb",
-            "circle-radius": 80,
+            "circle-radius": 10,
             "circle-stroke-width": 2,
             "circle-stroke-color": "#ffffff",
           },
@@ -222,41 +272,18 @@
           },*/
         });
 
-        const popup = new mapboxgl.Popup({
-          closeButton: false,
-          closeOnClick: false,
-        });
-
         map.on("mouseenter", "pointsLayer", (e) => {
-          // Change the cursor style as a UI indicator.
-          map.getCanvas().style.cursor = "pointer";
-
           console.log(e);
-          // Copy coordinates array.
-          const coordinates = e.features[0].geometry.coordinates.slice();
-          const description = e.features[0].properties.description;
 
-          console.log({ coordinates });
-
-          // Ensure that if the map is zoomed out such that multiple
-          // copies of the feature are visible, the popup appears
-          // over the copy being pointed to.
-          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-          }
-
-          // Populate the popup and set its coordinates
-          // based on the feature found.
-          popup.setLngLat(coordinates).setHTML(description).addTo(map);
+          d3.select(".tooltip-div").html(
+            `<div class="tooltip-html"> <div class="tooltip-name"> ${e.features[0].properties.headtxt}</div><div class="tooltip-picture"><img src= ${e.features[0].properties.imageUrl} ></div> </div>`
+          );
+          d3.select(".tooltip-container").style("display", "block");
         });
 
         map.on("mouseleave", "pointsLayer", () => {
           map.getCanvas().style.cursor = "";
-          popup.remove();
-        });
-
-        map.on("mousedown", "pointsLayer", () => {
-          popup.remove();
+          d3.select(".tooltip-container").style("display", "none");
         });
 
         map.on("click", "pointsLayer", (e) => {
@@ -265,8 +292,13 @@
       }
 
       function removeLayersAndSources(map) {
-d3.select("#pointsLayer").remove()
-d3.select("#pointsSource").remove()
+        if (map.getLayer("pointsLayer")) {
+          map.removeLayer("pointsLayer");
+        }
+        if (map.getSource("pointsSource")) {
+          map.removeSource("pointsSource");
+        }
+
         // Remove sources
         // Remove layers
       }
