@@ -36,7 +36,7 @@
         border-radius: 15px;
       }
       .tooltip-div {
-          margin:5px;
+        margin: 5px;
         height: 100%;
       }
       .tooltip-html {
@@ -44,7 +44,7 @@
 
         height: 100%;
         font-size: 20px;
-        color:#06044f;
+        color: #06044f;
         display: flex;
         flex-direction: row;
         justify-content: space-around;
@@ -70,10 +70,13 @@
         margin: 15px;
         display: flex;
         flex-direction: row;
-        color:#06044f;
+        color: #06044f;
         font-size: 20px;
         font-weight: 500;
         cursor: pointer;
+      }
+      .filter-text {
+        margin-top: 5px;
       }
       /* CSS */
       .button-70 {
@@ -136,7 +139,19 @@
       ]).then(([data, options, map]) => {
         console.log(data, options, map);
         data.forEach((d) => (d.imageUrl = "./assets/" + d.hotspoticon));
-        data.forEach((d) => (d.description = "<p>" + d.headtxt + "</p>"));
+        data.forEach(function (d) {
+          if (d.hotspoticon === "icon_FS2004.png") {
+            d.circlecolor = "#756929";
+          } else if (d.hotspoticon === "icon_FSX.png") {
+            d.circlecolor = "#4a7832";
+          } else if (d.hotspoticon === "icon_P3Dv5.png") {
+            d.circlecolor = "#255770";
+          } else if (d.hotspoticon === "icon_XP11.png") {
+            d.circlecolor = "#3f3080";
+          } else if (d.hotspoticon === "icon_FS2020.png") {
+            d.circlecolor = "#2f64ad";
+          }
+        });
 
         console.log(data);
         renderMap(data, map);
@@ -153,29 +168,35 @@
           .append("div")
           .html(
             (d, i) =>
-              `<div class="buttons-text"> <button class="button-70" style="width:20px;height:20px; "></button><div class="text">${d.name}</div></div>`
+              `<div class="buttons-text"> <button class="button-70" style="width:20px;height:20px; "></button><div class="filter-text">${d.name}</div></div>`
           )
           .on("click", function (d, i) {
             let currentFilteredData = data.filter(function (element) {
               return element[i.column] == i.value;
             });
-            if (filteredData.length == 81) {
-              filteredData = [];
-            }
+
             if (d3.select(this).classed("active")) {
               d3.select(this).classed("active", false);
-              filteredData = filteredData.filter(
-                (el) => !currentFilteredData.includes(el)
-              );
+              if (filteredData.length == data.length) {
+                filteredData = data.filter(
+                  (el) => !currentFilteredData.includes(el)
+                );
+              } else {
+                filteredData = filteredData.filter(
+                  (el) => !currentFilteredData.includes(el)
+                );
+              }
             } else {
               d3.select(this).classed("active", true);
               filteredData = filteredData.concat(currentFilteredData);
             }
             if (filteredData.length == 0) {
-              filteredData = data;
+              console.log(filteredData);
+              renderMap(data, map);
+            } else {
+              console.log(filteredData);
+              renderMap(filteredData, map);
             }
-            console.log(filteredData);
-            renderMap(filteredData, map);
           });
       }
 
@@ -261,15 +282,11 @@
           type: "circle",
           source: "pointsSource",
           paint: {
-            "circle-color": "#4264fb",
+            "circle-color": ["get", "circlecolor"],
             "circle-radius": 10,
             "circle-stroke-width": 2,
             "circle-stroke-color": "#ffffff",
           },
-          /*    layout: {
-           "minzoom": 0,
-            "maxzoom": 24,
-          },*/
         });
 
         map.on("mouseenter", "pointsLayer", (e) => {
