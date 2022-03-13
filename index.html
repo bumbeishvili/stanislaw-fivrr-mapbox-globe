@@ -11,38 +11,44 @@
     />
     <script src="https://unpkg.com/mapbox-gl@2.7.0-alpha.1/dist/mapbox-gl.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
       body {
         margin: 0;
         padding: 0;
       }
-      #map {
+      .app-globe-container #map {
         position: absolute;
         top: 0;
         bottom: 0;
         width: 100%;
       }
-      .filter-tooltip {
+      .app-globe-container .filter-tooltip {
+        font-family: "Montserrat", sans-serif;
         position: absolute;
         width: 100%;
         display: flex;
         flex-direction: row;
+        justify-content: space-between;
       }
-      .tooltip-container {
+      .app-globe-container .tooltip-container {
         display: none;
-        width: 40%;
+        max-width: 350px;
         height: 100px;
         border-radius: 15px;
       }
-      .tooltip-div {
-        margin: 5px;
+      .app-globe-container .tooltip-div {
+        margin: 20px;
         height: 100%;
       }
-      .tooltip-html {
+      .app-globe-container .tooltip-html {
         border-radius: 10px;
-
-        height: 100%;
+        padding: 20px;
         font-size: 20px;
         color: #06044f;
         display: flex;
@@ -51,62 +57,68 @@
         align-items: center;
         background: #63b7f2;
       }
-      .tooltip-name {
+      .app-globe-container .tooltip-name {
         text-align: center;
         margin-left: 10px;
         margin-right: 10px;
       }
-      .tooltip-image {
+      .app-globe-container .tooltip-image {
         margin-left: 10px;
         margin-right: 10px;
       }
-      .filters-container {
+      .app-globe-container .filters-container {
         display: flex;
         flex-direction: row;
         width: 60%;
-        height: 100px;
       }
-      .buttons-text {
-        margin: 15px;
-        display: flex;
-        flex-direction: row;
-        color: #06044f;
-        font-size: 20px;
-        font-weight: 500;
-        cursor: pointer;
+      .app-globe-container .buttons-text {
+        margin: 20px 10px;
       }
-      .filter-text {
-        margin-top: 5px;
-      }
-      /* CSS */
-      .button-70 {
-        background-image: linear-gradient(#0dccea, #0d70ea);
-        border: 0;
-        border-radius: 4px;
-        box-shadow: rgba(0, 0, 0, 0.3) 0 5px 15px;
+      .app-globe-container .button-1 {
+        background-color: #ea4c89;
+        border-radius: 8px;
+        border-style: none;
         box-sizing: border-box;
-        color: #fff;
+        color: #ffffff;
         cursor: pointer;
-        font-family: Montserrat, sans-serif;
-        font-size: 0.9em;
-        margin: 5px;
-        padding: 10px 15px;
+        display: inline-block;
+        font-family: "Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial,
+          sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        height: 40px;
+        line-height: 20px;
+        list-style: none;
+        margin: 0;
+        outline: none;
+        padding: 10px 16px;
+        position: relative;
         text-align: center;
+        text-decoration: none;
+        transition: color 100ms;
+        vertical-align: baseline;
         user-select: none;
         -webkit-user-select: none;
         touch-action: manipulation;
       }
-      .active .button-70 {
-        background-image: linear-gradient(#0d70ea, #144d8f);
+
+      .app-globe-container .button-1:hover,
+      .app-globe-container .button-1:focus {
+        background-color: #f082ac;
+      }
+      .app-globe-container .active .button-1 {
+        background-color: #bb245e;
       }
     </style>
   </head>
 
   <body translate="no">
-    <div id="map"></div>
-    <div class="filter-tooltip">
-      <div class="filters-container"></div>
-      <div class="tooltip-container"></div>
+    <div class="app-globe-container">
+      <div id="map"></div>
+      <div class="filter-tooltip">
+        <div class="filters-container"></div>
+        <div class="tooltip-container"></div>
+      </div>
     </div>
     <script>
       let data = null;
@@ -140,20 +152,11 @@
         console.log(data, options, map);
         data.forEach((d) => (d.imageUrl = "./assets/" + d.hotspoticon));
         data.forEach(function (d) {
-          if (d.hotspoticon === "icon_FS2004.png") {
-            d.circlecolor = "#756929";
-          } else if (d.hotspoticon === "icon_FSX.png") {
-            d.circlecolor = "#4a7832";
-          } else if (d.hotspoticon === "icon_P3Dv5.png") {
-            d.circlecolor = "#255770";
-          } else if (d.hotspoticon === "icon_XP11.png") {
-            d.circlecolor = "#3f3080";
-          } else if (d.hotspoticon === "icon_FS2020.png") {
-            d.circlecolor = "#2f64ad";
+          if (d.color === "") {
+            d.color = "#4d4dff";
           }
         });
 
-        console.log(data);
         renderMap(data, map);
         addButtons(options, data);
         addTooltip(options);
@@ -168,11 +171,11 @@
           .append("div")
           .html(
             (d, i) =>
-              `<div class="buttons-text"> <button class="button-70" style="width:20px;height:20px; "></button><div class="filter-text">${d.name}</div></div>`
+              `<div class="buttons-text"> <button class="button-1">${d.name}</button></div>`
           )
-          .on("click", function (d, i) {
+          .on("click", function (e, d) {
             let currentFilteredData = data.filter(function (element) {
-              return element[i.column] == i.value;
+              return element[d.column] == d.value;
             });
 
             if (d3.select(this).classed("active")) {
@@ -191,10 +194,8 @@
               filteredData = filteredData.concat(currentFilteredData);
             }
             if (filteredData.length == 0) {
-              console.log(filteredData);
               renderMap(data, map);
             } else {
-              console.log(filteredData);
               renderMap(filteredData, map);
             }
           });
@@ -204,9 +205,7 @@
         d3.select(".tooltip-container")
           .append("div")
           .attr("class", "tooltip-div")
-          .html(
-            `<div class="tooltip-html" style="width:200px;height:200px; "> some </div>`
-          );
+          .html(`<div class="tooltip-html"> </div>`);
       }
       function renderMap(data, map) {
         removeLayersAndSources(
@@ -282,7 +281,7 @@
           type: "circle",
           source: "pointsSource",
           paint: {
-            "circle-color": ["get", "circlecolor"],
+            "circle-color": ["get", "color"],
             "circle-radius": 10,
             "circle-stroke-width": 2,
             "circle-stroke-color": "#ffffff",
@@ -290,10 +289,8 @@
         });
 
         map.on("mouseenter", "pointsLayer", (e) => {
-          console.log(e);
-
           d3.select(".tooltip-div").html(
-            `<div class="tooltip-html"> <div class="tooltip-name"> ${e.features[0].properties.headtxt}</div><div class="tooltip-picture"><img src= ${e.features[0].properties.imageUrl} ></div> </div>`
+            `<div class="tooltip-html"><div class="tooltip-picture"><img src= ${e.features[0].properties.imageUrl} ></div> <div class="tooltip-name"> ${e.features[0].properties.headtxt}</div> </div>`
           );
           d3.select(".tooltip-container").style("display", "block");
         });
@@ -315,14 +312,6 @@
         if (map.getSource("pointsSource")) {
           map.removeSource("pointsSource");
         }
-
-        // Remove sources
-        // Remove layers
-      }
-
-      function onFilter(data) {
-        // Remove all images
-        // Add images for data
       }
     </script>
   </body>
