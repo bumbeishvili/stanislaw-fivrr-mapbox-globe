@@ -11,24 +11,118 @@
     />
     <script src="https://unpkg.com/mapbox-gl@2.7.0-alpha.1/dist/mapbox-gl.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
       body {
         margin: 0;
         padding: 0;
       }
-      #map {
+      .app-globe-container #map {
         position: absolute;
         top: 0;
         bottom: 0;
         width: 100%;
       }
+      .app-globe-container .filter-tooltip {
+        font-family: "Montserrat", sans-serif;
+        position: absolute;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+      .app-globe-container .tooltip-container {
+        display: none;
+        max-width: 350px;
+        border-radius: 15px;
+      }
+      .app-globe-container .tooltip-div {
+        border-radius: 5px;
+        padding: 20px;
+        background-color: #F4F6FC;
+        margin: 20px;
+      }
+      .app-globe-container .tooltip-html {
+        border-radius: 5px;
+        padding: 20px;
+        font-size: 18px;
+        color: #06044f;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        background: #ffffff;
+      }
+      .app-globe-container .tooltip-name {
+        text-align: center;
+        margin-left: 10px;
+        margin-right: 10px;
+      }
+      .app-globe-container .tooltip-image {
+          width:50px;
+          height:50px;
+        margin-left: 10px;
+        margin-right: 10px;
+      }
+      .app-globe-container .filters-container {
+        display: flex;
+        flex-direction: row;
+        width: 60%;
+      }
+      .app-globe-container .buttons-text {
+        margin: 20px 10px;
+      }
+      .app-globe-container .button-1 {
+        background-color: #ea4c89;
+        border-radius: 8px;
+        border-style: none;
+        box-sizing: border-box;
+        color: #ffffff;
+        cursor: pointer;
+        display: inline-block;
+        font-family: "Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial,
+          sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        height: 40px;
+        line-height: 20px;
+        list-style: none;
+        margin: 0;
+        outline: none;
+        padding: 10px 16px;
+        position: relative;
+        text-align: center;
+        text-decoration: none;
+        transition: color 100ms;
+        vertical-align: baseline;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+      }
+
+      .app-globe-container .button-1:hover,
+      .app-globe-container .button-1:focus {
+        background-color: #f082ac;
+      }
+      .app-globe-container .active .button-1 {
+        background-color: #bb245e;
+      }
     </style>
   </head>
 
   <body translate="no">
-    <div id="map"></div>
-
+    <div class="app-globe-container">
+      <div id="map"></div>
+      <div class="filter-tooltip">
+        <div class="filters-container"></div>
+        <div class="tooltip-container"></div>
+      </div>
+    </div>
     <script>
       let data = null;
       let options = null;
@@ -40,7 +134,7 @@
         style: "mapbox://styles/mapbox/streets-v11",
         center: [-81, 30],
         zoom: 1.5,
-        projection: "globe", // starting projection
+        //  projection: "globe", // starting projection
       });
 
       const mapLoaderPromise = new Promise((resolve, reject) => {
@@ -59,18 +153,67 @@
         mapLoaderPromise,
       ]).then(([data, options, map]) => {
         console.log(data, options, map);
-data.forEach(d=>d.imageUrl="./assets/"+d.hotspoticon)
-console.log(data)
-        renderMap(
-          data,
-          options,
-          map
-        );
-      });
+        data.forEach((d) => (d.imageUrl = "./assets/" + d.hotspoticon));
+        data.forEach(function (d) {
+          if (d.color === "") {
+            d.color = "#4d4dff";
+          }
+        });
 
-      function renderMap(data, options, map) {
-        removeAllImages();
-        let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
+        renderMap(data, map);
+        addButtons(options, data);
+        addTooltip(options);
+      });
+      function addButtons(options, data) {
+        var filteredData = [];
+        var buttons = d3
+          .select(".filters-container")
+          .selectAll("div")
+          .data(options)
+          .enter()
+          .append("div")
+          .html(
+            (d, i) =>
+              `<div class="buttons-text"> <button class="button-1">${d.name}</button></div>`
+          )
+          .on("click", function (e, d) {
+            let currentFilteredData = data.filter(function (element) {
+              return element[d.column] == d.value;
+            });
+
+            if (d3.select(this).classed("active")) {
+              d3.select(this).classed("active", false);
+              if (filteredData.length == data.length) {
+                filteredData = data.filter(
+                  (el) => !currentFilteredData.includes(el)
+                );
+              } else {
+                filteredData = filteredData.filter(
+                  (el) => !currentFilteredData.includes(el)
+                );
+              }
+            } else {
+              d3.select(this).classed("active", true);
+              filteredData = filteredData.concat(currentFilteredData);
+            }
+            if (filteredData.length == 0) {
+              renderMap(data, map);
+            } else {
+              renderMap(filteredData, map);
+            }
+          });
+      }
+
+      function addTooltip(options) {
+        d3.select(".tooltip-container")
+          .append("div")
+          .attr("class", "tooltip-div")
+          .html(`<div class="tooltip-html"> </div>`);
+      }
+      function renderMap(data, map) {
+        removeLayersAndSources(
+          map
+        ); /*  let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
         let imgPromisesArray = allImageUrls.map(
           (url) =>
             new Promise((resolve, reject) =>
@@ -78,22 +221,21 @@ console.log(data)
                 resolve({ image: image, name: url });
               })
             )
-        );
+        );*/
 
-        Promise.all(imgPromisesArray).then((imageObjects) => {
-          const geojson = convertDataToGeojson(data);
-          console.log("got geojson", geojson);
+        //   Promise.all(imgPromisesArray).then((imageObjects) => {
+        const geojson = convertDataToGeojson(data);
+        console.log("got geojson", geojson);
 
-          console.log(imageObjects);
+        /*    console.log(imageObjects);
           imageObjects.forEach((imgObj) => {
             map.addImage(imgObj.name, imgObj.image);
             console.log("added", imgObj);
-          });
+          });*/
 
-          addImagesToMap(geojson, map);
-        });
+        addImagesToMap(geojson, map);
+        //   });
       }
-
 
       function convertDataToGeojson(data) {
         let geojson = {
@@ -119,29 +261,60 @@ console.log(data)
         map.addSource("pointsSource", {
           type: "geojson",
           data: geojson,
+          maxzoom: 7,
         });
 
         // Add a layer to use the image to represent the data.
-        map.addLayer({
+        /*    map.addLayer({
           id: "pointsLayer",
-          type: "symbol",
+          type: "circle",//"symbol",
           source: "pointsSource", // reference the data source
-          layout: {
+         layout: {
             "icon-image": ["get", "imageUrl"], // reference the image
             "icon-size": 2,
             "icon-allow-overlap":true,
           },
+        paint: {
+      "circle-color": "blue",
+      "circle-radius":15
+    }
+        });*/
+        map.addLayer({
+          id: "pointsLayer",
+          type: "circle",
+          source: "pointsSource",
+          paint: {
+            "circle-color": ["get", "color"],
+            "circle-radius": 10,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff",
+          },
+        });
+
+        map.on("mouseenter", "pointsLayer", (e) => {
+          d3.select(".tooltip-div").html(
+            `<div class="tooltip-html"><div class="tooltip-picture"><img src= ${e.features[0].properties.imageUrl} ></div> <div class="tooltip-name"> ${e.features[0].properties.headtxt}</div> </div>`
+          );
+          d3.select(".tooltip-container").style("display", "block");
+        });
+
+        map.on("mouseleave", "pointsLayer", () => {
+          map.getCanvas().style.cursor = "";
+          d3.select(".tooltip-container").style("display", "none");
+        });
+
+        map.on("click", "pointsLayer", (e) => {
+          window.open(e.features[0].properties.url, "_blank");
         });
       }
 
-      function removeAllImages(map) {
-        // Remove sources
-        // Remove layers
-      }
-
-      function onFilter(data) {
-        // Remove all images
-        // Add images for data
+      function removeLayersAndSources(map) {
+        if (map.getLayer("pointsLayer")) {
+          map.removeLayer("pointsLayer");
+        }
+        if (map.getSource("pointsSource")) {
+          map.removeSource("pointsSource");
+        }
       }
     </script>
   </body>
