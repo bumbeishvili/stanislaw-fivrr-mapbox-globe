@@ -9,7 +9,7 @@
       href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css"
       rel="stylesheet"
     />
-    <script src="https://unpkg.com/mapbox-gl@2.7.0-alpha.1/dist/mapbox-gl.js"></script>
+    <script src="https://unpkg.com/mapbox-gl@2.8.0-alpha.1/dist/mapbox-gl.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -28,8 +28,10 @@
         bottom: 0;
         width: 100%;
       }
-      .app-globe-container .filter-tooltip {
+      .app-globe-container * {
         font-family: "Montserrat", sans-serif;
+      }
+      .app-globe-container .filter-tooltip {
         position: absolute;
         width: 100%;
         display: flex;
@@ -44,7 +46,7 @@
       .app-globe-container .tooltip-div {
         border-radius: 5px;
         padding: 20px;
-        background-color: #F4F6FC;
+        background-color: #f4f6fc;
         margin: 20px;
       }
       .app-globe-container .tooltip-html {
@@ -64,8 +66,8 @@
         margin-right: 10px;
       }
       .app-globe-container .tooltip-image {
-          width:50px;
-          height:50px;
+        width: 50px;
+        height: 50px;
         margin-left: 10px;
         margin-right: 10px;
       }
@@ -118,6 +120,23 @@
   <body translate="no">
     <div class="app-globe-container">
       <div id="map"></div>
+      <div
+        class="info-text"
+        style="
+          width: 230px;
+          font-size: 12px;
+          border-radius: 11px;
+          padding: 20px;
+          position: absolute;
+          bottom: 7px;
+          left: 7px;
+          z-index:999;
+          color: white;
+          background-color: #10313d;
+        "
+      >
+        Zoom in until you see green outlined points with additional details
+      </div>
       <div class="filter-tooltip">
         <div class="filters-container"></div>
         <div class="tooltip-container"></div>
@@ -134,7 +153,7 @@
         style: "mapbox://styles/mapbox/streets-v11",
         center: [-81, 30],
         zoom: 1.5,
-        //  projection: "globe", // starting projection
+        projection: "globe", // starting projection
       });
 
       const mapLoaderPromise = new Promise((resolve, reject) => {
@@ -145,10 +164,10 @@
 
       Promise.all([
         d3.csv(
-          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmL9hNibI9OGDwx0CG1pfops0uJj7VN9lnQUbsrfyQjZxNYTENc_G2nW4yB4IBrtMBboR-N-eZZ2JG/pub?output=csv"
+          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtRXW8xFrMbGQU6x74XFZqD5xVoPduIpgTCUS6W8H3Txr24kPKTQVLFsHM2kYrn01WVJiSiA9lfFoo/pub?gid=0&single=true&output=csv"
         ),
         d3.csv(
-          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmL9hNibI9OGDwx0CG1pfops0uJj7VN9lnQUbsrfyQjZxNYTENc_G2nW4yB4IBrtMBboR-N-eZZ2JG/pub?gid=1423471266&single=true&output=csv"
+          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtRXW8xFrMbGQU6x74XFZqD5xVoPduIpgTCUS6W8H3Txr24kPKTQVLFsHM2kYrn01WVJiSiA9lfFoo/pub?gid=2131501706&single=true&output=csv"
         ),
         mapLoaderPromise,
       ]).then(([data, options, map]) => {
@@ -285,13 +304,39 @@
           source: "pointsSource",
           paint: {
             "circle-color": ["get", "color"],
-            "circle-radius": 10,
-            "circle-stroke-width": 2,
-            "circle-stroke-color": "#ffffff",
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              // zoom is 5 (or less) -> circle radius will be 1px
+              5.9,
+              5,
+              // zoom is 10 (or greater) -> circle radius will be 5px
+              6,
+              10,
+            ],
+            "circle-stroke-width": 8,
+            "circle-stroke-color":[
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              // zoom is 5 (or less) -> circle radius will be 1px
+              5.9,
+              "lightgray",
+              // zoom is 10 (or greater) -> circle radius will be 5px
+              6,
+              "#19A34A",
+            ] ,
           },
         });
 
+        map.on("mousemove", (e) => {
+          console.log(map.getZoom())
+          console.log("mousemove", e);
+        });
+
         map.on("mouseenter", "pointsLayer", (e) => {
+          console.log("mouseenter");
           d3.select(".tooltip-div").html(
             `<div class="tooltip-html"><div class="tooltip-picture"><img src= ${e.features[0].properties.imageUrl} ></div> <div class="tooltip-name"> ${e.features[0].properties.headtxt}</div> </div>`
           );
@@ -299,6 +344,7 @@
         });
 
         map.on("mouseleave", "pointsLayer", () => {
+          console.log("pointslayer mouseleave");
           map.getCanvas().style.cursor = "";
           d3.select(".tooltip-container").style("display", "none");
         });
