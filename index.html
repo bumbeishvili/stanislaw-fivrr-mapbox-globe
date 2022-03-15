@@ -214,6 +214,13 @@
               d.value
             );
           });
+
+        options
+          .filter((d) => d.type == "projection")
+          .forEach((d) => {
+            globe = d.value == "globe";
+            updateCamera()
+          });
       });
       function addButtons(options, data) {
         var filteredData = [];
@@ -223,7 +230,7 @@
           .data(options)
           .enter()
           .append("div")
-          .classed('button-wrapper-div',true)
+          .classed("button-wrapper-div", true)
           .html(
             (d, i) =>
               `<div class="buttons-text"> <button class="button-1">${d.name}</button></div>`
@@ -232,7 +239,6 @@
             let currentFilteredData = data.filter(function (element) {
               return element[d.column] == d.value;
             });
-
 
             if (d3.select(this).classed("active")) {
               d3.select(this).classed("active", false);
@@ -247,9 +253,9 @@
               }
             } else {
               debugger;
-              d3.selectAll(".button-wrapper-div").classed('active',false)
+              d3.selectAll(".button-wrapper-div").classed("active", false);
               d3.select(this).classed("active", true);
-              filteredData = currentFilteredData // filteredData.concat(currentFilteredData);
+              filteredData = currentFilteredData; // filteredData.concat(currentFilteredData);
             }
             if (filteredData.length == 0) {
               renderMap(data, map);
@@ -401,6 +407,9 @@
 
       function switchCamera() {
         globe = !globe;
+        updateCamera();
+      }
+      function updateCamera() {
         map.setProjection({ name: globe ? "globe" : "mercator" });
       }
     </script>
