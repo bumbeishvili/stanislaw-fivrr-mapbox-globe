@@ -80,7 +80,8 @@
         margin: 20px 10px;
       }
       .app-globe-container .button-1 {
-        background-color: #ea4c89;
+        background-color: #bb245e;
+        opacity: 0.6;
         border-radius: 8px;
         border-style: none;
         box-sizing: border-box;
@@ -108,10 +109,10 @@
       }
 
       .app-globe-container .button-1:hover {
-        background-color: #f082ac;
+        opacity: 0.7;
       }
       .app-globe-container .active .button-1 {
-        background-color: #bb245e;
+        opacity: 1;
       }
     </style>
   </head>
@@ -200,8 +201,19 @@
         });
 
         renderMap(data, map);
-        addButtons(options, data);
-        addTooltip(options);
+        addButtons(
+          options.filter((d) => d.type == "filter"),
+          data
+        );
+        addTooltip(options.filter((d) => d.type == "filter"));
+        options
+          .filter((d) => d.type == "filterButtonColor")
+          .forEach((d) => {
+            d3.selectAll(".app-globe-container .button-1").style(
+              "background-color",
+              d.value
+            );
+          });
       });
       function addButtons(options, data) {
         var filteredData = [];
@@ -211,6 +223,7 @@
           .data(options)
           .enter()
           .append("div")
+          .classed('button-wrapper-div',true)
           .html(
             (d, i) =>
               `<div class="buttons-text"> <button class="button-1">${d.name}</button></div>`
@@ -219,6 +232,7 @@
             let currentFilteredData = data.filter(function (element) {
               return element[d.column] == d.value;
             });
+
 
             if (d3.select(this).classed("active")) {
               d3.select(this).classed("active", false);
@@ -232,8 +246,10 @@
                 );
               }
             } else {
+              debugger;
+              d3.selectAll(".button-wrapper-div").classed('active',false)
               d3.select(this).classed("active", true);
-              filteredData = filteredData.concat(currentFilteredData);
+              filteredData = currentFilteredData // filteredData.concat(currentFilteredData);
             }
             if (filteredData.length == 0) {
               renderMap(data, map);
