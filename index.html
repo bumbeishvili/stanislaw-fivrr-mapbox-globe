@@ -44,7 +44,7 @@
     position: fixed;
     right: 0px;
     top: 39px;
-    pointer-events:none;
+    pointer-events: none;
    }
    .app-globe-container .tooltip-div {
     border-radius: 5px;
@@ -80,6 +80,7 @@
    }
    .app-globe-container .buttons-text {
     margin: 20px 10px;
+    margin-bottom: 0px;
    }
    .app-globe-container .button-1 {
     background-color: #bb245e;
@@ -199,7 +200,6 @@
     ),
     mapLoaderPromise,
    ]).then(([data, options, map]) => {
-    
     data.forEach((d) => (d.imageUrl = "./assets/" + d.hotspoticon));
     data.forEach(function (d) {
      if (d.color === "") {
@@ -290,7 +290,6 @@
 
     //   Promise.all(imgPromisesArray).then((imageObjects) => {
     const geojson = convertDataToGeojson(data);
-    
 
     /*    console.log(imageObjects);
           imageObjects.forEach((imgObj) => {
@@ -366,12 +365,9 @@
      },
     });
 
-    map.on("mousemove", (e) => {
-
-    });
+    map.on("mousemove", (e) => {});
 
     map.on("mouseenter", "pointsLayer", (e) => {
-     
      d3
       .select(".tooltip-div")
       .html(
@@ -381,7 +377,6 @@
     });
 
     map.on("mouseleave", "pointsLayer", () => {
-     
      map.getCanvas().style.cursor = "";
      d3.select(".tooltip-container").style("display", "none");
     });
