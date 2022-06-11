@@ -1,280 +1,284 @@
 <!DOCTYPE html>
 
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Globe</title>
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
-    <link
-      href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css"
-      rel="stylesheet"
-    />
-    <script src="https://unpkg.com/mapbox-gl@2.8.0-alpha.1/dist/mapbox-gl.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-      }
-      .app-globe-container #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 100%;
-      }
-      .app-globe-container * {
-        font-family: "Montserrat", sans-serif;
-      }
-      .app-globe-container .filter-tooltip {
-        position: absolute;
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-      }
-      .app-globe-container .tooltip-container {
-        display: none;
-        max-width: 350px;
-        border-radius: 15px;
-      }
-      .app-globe-container .tooltip-div {
-        border-radius: 5px;
-        padding: 20px;
-        background-color: #f4f6fc;
-        margin: 20px;
-      }
-      .app-globe-container .tooltip-html {
-        border-radius: 5px;
-        padding: 20px;
-        font-size: 18px;
-        color: #06044f;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-around;
-        align-items: center;
-        background: #ffffff;
-      }
-      .app-globe-container .tooltip-name {
-        text-align: center;
-        margin-left: 10px;
-        margin-right: 10px;
-      }
-      .app-globe-container .tooltip-image {
-        width: 50px;
-        height: 50px;
-        margin-left: 10px;
-        margin-right: 10px;
-      }
-      .app-globe-container .filters-container {
-        display: flex;
-        flex-direction: row;
-        width: 60%;
-      }
-      .app-globe-container .buttons-text {
-        margin: 20px 10px;
-      }
-      .app-globe-container .button-1 {
-        background-color: #bb245e;
-        opacity: 0.6;
-        border-radius: 8px;
-        border-style: none;
-        box-sizing: border-box;
-        color: #ffffff;
-        cursor: pointer;
-        display: inline-block;
-        font-family: "Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial,
-          sans-serif;
-        font-size: 14px;
-        font-weight: 500;
-        height: 40px;
-        line-height: 20px;
-        list-style: none;
-        margin: 0;
-        outline: none;
-        padding: 10px 16px;
-        position: relative;
-        text-align: center;
-        text-decoration: none;
-        transition: color 100ms;
-        vertical-align: baseline;
-        user-select: none;
-        -webkit-user-select: none;
-        touch-action: manipulation;
-      }
+ <head>
+  <meta charset="UTF-8" />
+  <title>Globe</title>
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+  <link
+   href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css"
+   rel="stylesheet"
+  />
+  <script src="https://unpkg.com/mapbox-gl@2.9.0-beta.2/dist/mapbox-gl.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+   href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap"
+   rel="stylesheet"
+  />
+  <style>
+   body {
+    margin: 0;
+    padding: 0;
+   }
+   .app-globe-container #map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+   }
+   .app-globe-container * {
+    font-family: "Montserrat", sans-serif;
+   }
+   .app-globe-container .filter-tooltip {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+   }
+   .app-globe-container .tooltip-container {
+    display: none;
+    max-width: 350px;
+    border-radius: 15px;
+    position: fixed;
+    right: 0px;
+    top: 39px;
+    pointer-events:none;
+   }
+   .app-globe-container .tooltip-div {
+    border-radius: 5px;
+    padding: 20px;
+    background-color: #f4f6fc;
+    margin: 20px;
+   }
+   .app-globe-container .tooltip-html {
+    border-radius: 5px;
+    padding: 20px;
+    font-size: 18px;
+    color: #06044f;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    background: #ffffff;
+   }
+   .app-globe-container .tooltip-name {
+    text-align: center;
+    margin-left: 10px;
+    margin-right: 10px;
+   }
+   .app-globe-container .tooltip-image {
+    width: 50px;
+    height: 50px;
+    margin-left: 10px;
+    margin-right: 10px;
+   }
+   .app-globe-container .filters-container {
+    display: flex;
+    flex-direction: row;
+   }
+   .app-globe-container .buttons-text {
+    margin: 20px 10px;
+   }
+   .app-globe-container .button-1 {
+    background-color: #bb245e;
+    opacity: 0.6;
+    border-radius: 8px;
+    border-style: none;
+    box-sizing: border-box;
+    color: #ffffff;
+    cursor: pointer;
+    display: inline-block;
+    font-family: "Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial,
+     sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    height: 40px;
+    line-height: 20px;
+    list-style: none;
+    margin: 0;
+    outline: none;
+    padding: 10px 16px;
+    position: relative;
+    text-align: center;
+    text-decoration: none;
+    transition: color 100ms;
+    vertical-align: baseline;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+   }
 
-      .app-globe-container .button-1:hover {
-        opacity: 0.7;
-      }
-      .app-globe-container .active .button-1 {
-        opacity: 1;
-      }
-    </style>
-  </head>
+   .app-globe-container .button-1:hover {
+    opacity: 0.7;
+   }
+   .app-globe-container .active .button-1 {
+    opacity: 1;
+   }
+  </style>
+ </head>
 
-  <body translate="no">
-    <div class="app-globe-container">
-      <div id="map"></div>
-      <div>
-        <button
-          onclick="switchCamera()"
-          class="button-1"
-          style="position: absolute; right: 10px; top: 10px; z-index: 1000"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M4 5.75C4 5.02065 4.28973 4.32118 4.80546 3.80546C5.32118 3.28973 6.02065 3 6.75 3H13.25C13.9793 3 14.6788 3.28973 15.1945 3.80546C15.7103 4.32118 16 5.02065 16 5.75V6.291L17.99 4.769C18.813 4.139 20 4.726 20 5.762V12.238C20 13.274 18.813 13.86 17.99 13.231L16 11.71V12.251C15.9997 12.9802 15.7099 13.6794 15.1942 14.1949C14.6785 14.7104 13.9792 15 13.25 15H6.75C6.02065 15 5.32118 14.7103 4.80546 14.1945C4.28973 13.6788 4 12.9793 4 12.25V5.75ZM6.75 4.5C6.06 4.5 5.5 5.06 5.5 5.75V12.25C5.5 12.94 6.06 13.5 6.75 13.5H13.25C13.94 13.5 14.5 12.94 14.5 12.25V5.75C14.5 5.06 13.94 4.5 13.25 4.5H6.75ZM16 9.82L18.5 11.732V6.268L16 8.179V9.821V9.82ZM18.363 16.138C17.413 15.906 16.233 15.725 14.905 15.616C15.5214 15.312 16.0429 14.8451 16.413 14.266C17.26 14.375 18.037 14.515 18.718 14.68C19.586 14.891 20.341 15.154 20.897 15.474C21.397 15.762 22 16.25 22 17C22 17.47 21.755 17.839 21.483 18.099C21.212 18.358 20.855 18.569 20.466 18.745C19.684 19.1 18.612 19.385 17.374 19.593C17.2768 19.6094 17.1774 19.6064 17.0813 19.5843C16.9853 19.5622 16.8946 19.5214 16.8143 19.4643C16.6522 19.3489 16.5425 19.1738 16.5095 18.9775C16.4765 18.7812 16.5228 18.5799 16.6382 18.4178C16.7536 18.2557 16.9287 18.146 17.125 18.113C18.304 17.915 19.232 17.658 19.846 17.379C20.156 17.239 20.346 17.111 20.446 17.014L20.456 17.006L20.462 17C20.3684 16.9109 20.2631 16.8348 20.149 16.774C19.769 16.556 19.169 16.334 18.363 16.138ZM20.509 16.942L20.511 16.939L20.509 16.942ZM3.103 15.474C3.45086 15.2802 3.81613 15.1195 4.194 14.994C4.774 15.535 5.527 15.894 6.36 15.98C6.107 16.03 5.865 16.082 5.637 16.138C4.83 16.334 4.231 16.556 3.851 16.774C3.675 16.875 3.584 16.952 3.538 17C3.584 17.048 3.675 17.125 3.851 17.226C4.231 17.444 4.831 17.666 5.637 17.862C7.225 18.249 9.452 18.496 11.941 18.5L11.222 17.78C11.1524 17.7103 11.0972 17.6275 11.0596 17.5365C11.022 17.4454 11.0027 17.3478 11.0028 17.2493C11.0029 17.1508 11.0223 17.0532 11.0601 16.9622C11.0979 16.8713 11.1533 16.7886 11.223 16.719C11.2927 16.6494 11.3755 16.5942 11.4665 16.5566C11.5576 16.519 11.6552 16.4997 11.7537 16.4998C11.8522 16.4999 11.9498 16.5193 12.0408 16.5571C12.1317 16.5949 12.2144 16.6503 12.284 16.72L14.281 18.72C14.4215 18.8606 14.5003 19.0512 14.5003 19.25C14.5003 19.4488 14.4215 19.6394 14.281 19.78L12.283 21.777C12.1408 21.9095 11.9528 21.9816 11.7585 21.9782C11.5642 21.9747 11.3788 21.896 11.2414 21.7586C11.104 21.6212 11.0253 21.4358 11.0218 21.2415C11.0184 21.0472 11.0905 20.8592 11.223 20.717L11.939 20C9.367 19.996 7.016 19.741 5.282 19.32C4.414 19.109 3.659 18.846 3.103 18.526C2.603 18.238 2 17.75 2 17C2 16.25 2.603 15.762 3.103 15.474Z"
-              fill="white"
-            />
-          </svg>
-        </button>
-      </div>
-      <div
-        class="info-text"
-        style="
-          width: 230px;
-          font-size: 12px;
-          border-radius: 11px;
-          padding: 20px;
-          position: absolute;
-          bottom: 7px;
-          left: 7px;
-          z-index: 999;
-          color: white;
-          background-color: #10313d;
-        "
-      >
-        Zoom in until you see green outlined points with additional details
-      </div>
-      <div class="filter-tooltip">
-        <div class="filters-container"></div>
-        <div class="tooltip-container"></div>
-      </div>
-    </div>
-    <script>
-      let data = null;
-      let options = null;
-      let globe = true;
-      mapboxgl.accessToken =
-        "pk.eyJ1IjoiZHJ6ZXdpZWNraWRlc2lnbiIsImEiOiJjbDBzMTk3ZjEwOG1iM2lwNXc5ZnI4ZWlhIn0.mvpzj0WsME6eRUJcmM8caA";
+ <body translate="no">
+  <div class="app-globe-container">
+   <div id="map"></div>
+   <div>
+    <button
+     onclick="switchCamera()"
+     class="button-1"
+     style="position: absolute; right: 10px; top: 10px; z-index: 1000"
+    >
+     <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+     >
+      <path
+       d="M4 5.75C4 5.02065 4.28973 4.32118 4.80546 3.80546C5.32118 3.28973 6.02065 3 6.75 3H13.25C13.9793 3 14.6788 3.28973 15.1945 3.80546C15.7103 4.32118 16 5.02065 16 5.75V6.291L17.99 4.769C18.813 4.139 20 4.726 20 5.762V12.238C20 13.274 18.813 13.86 17.99 13.231L16 11.71V12.251C15.9997 12.9802 15.7099 13.6794 15.1942 14.1949C14.6785 14.7104 13.9792 15 13.25 15H6.75C6.02065 15 5.32118 14.7103 4.80546 14.1945C4.28973 13.6788 4 12.9793 4 12.25V5.75ZM6.75 4.5C6.06 4.5 5.5 5.06 5.5 5.75V12.25C5.5 12.94 6.06 13.5 6.75 13.5H13.25C13.94 13.5 14.5 12.94 14.5 12.25V5.75C14.5 5.06 13.94 4.5 13.25 4.5H6.75ZM16 9.82L18.5 11.732V6.268L16 8.179V9.821V9.82ZM18.363 16.138C17.413 15.906 16.233 15.725 14.905 15.616C15.5214 15.312 16.0429 14.8451 16.413 14.266C17.26 14.375 18.037 14.515 18.718 14.68C19.586 14.891 20.341 15.154 20.897 15.474C21.397 15.762 22 16.25 22 17C22 17.47 21.755 17.839 21.483 18.099C21.212 18.358 20.855 18.569 20.466 18.745C19.684 19.1 18.612 19.385 17.374 19.593C17.2768 19.6094 17.1774 19.6064 17.0813 19.5843C16.9853 19.5622 16.8946 19.5214 16.8143 19.4643C16.6522 19.3489 16.5425 19.1738 16.5095 18.9775C16.4765 18.7812 16.5228 18.5799 16.6382 18.4178C16.7536 18.2557 16.9287 18.146 17.125 18.113C18.304 17.915 19.232 17.658 19.846 17.379C20.156 17.239 20.346 17.111 20.446 17.014L20.456 17.006L20.462 17C20.3684 16.9109 20.2631 16.8348 20.149 16.774C19.769 16.556 19.169 16.334 18.363 16.138ZM20.509 16.942L20.511 16.939L20.509 16.942ZM3.103 15.474C3.45086 15.2802 3.81613 15.1195 4.194 14.994C4.774 15.535 5.527 15.894 6.36 15.98C6.107 16.03 5.865 16.082 5.637 16.138C4.83 16.334 4.231 16.556 3.851 16.774C3.675 16.875 3.584 16.952 3.538 17C3.584 17.048 3.675 17.125 3.851 17.226C4.231 17.444 4.831 17.666 5.637 17.862C7.225 18.249 9.452 18.496 11.941 18.5L11.222 17.78C11.1524 17.7103 11.0972 17.6275 11.0596 17.5365C11.022 17.4454 11.0027 17.3478 11.0028 17.2493C11.0029 17.1508 11.0223 17.0532 11.0601 16.9622C11.0979 16.8713 11.1533 16.7886 11.223 16.719C11.2927 16.6494 11.3755 16.5942 11.4665 16.5566C11.5576 16.519 11.6552 16.4997 11.7537 16.4998C11.8522 16.4999 11.9498 16.5193 12.0408 16.5571C12.1317 16.5949 12.2144 16.6503 12.284 16.72L14.281 18.72C14.4215 18.8606 14.5003 19.0512 14.5003 19.25C14.5003 19.4488 14.4215 19.6394 14.281 19.78L12.283 21.777C12.1408 21.9095 11.9528 21.9816 11.7585 21.9782C11.5642 21.9747 11.3788 21.896 11.2414 21.7586C11.104 21.6212 11.0253 21.4358 11.0218 21.2415C11.0184 21.0472 11.0905 20.8592 11.223 20.717L11.939 20C9.367 19.996 7.016 19.741 5.282 19.32C4.414 19.109 3.659 18.846 3.103 18.526C2.603 18.238 2 17.75 2 17C2 16.25 2.603 15.762 3.103 15.474Z"
+       fill="white"
+      />
+     </svg>
+    </button>
+   </div>
+   <div
+    class="info-text"
+    style="
+     width: 230px;
+     font-size: 12px;
+     border-radius: 11px;
+     padding: 20px;
+     position: absolute;
+     bottom: 7px;
+     left: 7px;
+     z-index: 999;
+     color: white;
+     background-color: #10313d;
+     display: none;
+    "
+   >
+    Zoom in until you see green outlined points with additional details
+   </div>
+   <div class="filter-tooltip">
+    <div class="filters-container"></div>
+    <div class="tooltip-container"></div>
+   </div>
+  </div>
+  <script>
+   let data = null;
+   let options = null;
+   let globe = true;
+   mapboxgl.accessToken =
+    "pk.eyJ1IjoiZHJ6ZXdpZWNraWRlc2lnbiIsImEiOiJjbDBzMTk3ZjEwOG1iM2lwNXc5ZnI4ZWlhIn0.mvpzj0WsME6eRUJcmM8caA";
 
-      const map = new mapboxgl.Map({
-        container: "map",
-        style: "mapbox://styles/mapbox/streets-v11",
-        center: [-81, 30],
-        zoom: 1.5,
-        projection: globe ? "globe" : "mercator", // starting projection
+   const map = new mapboxgl.Map({
+    container: "map",
+    style: "mapbox://styles/mapbox/streets-v11",
+    center: [-81, 30],
+    zoom: 1.5,
+    "space-color": "red",
+    projection: globe ? "globe" : "mercator", // starting projection
+   });
+
+   const mapLoaderPromise = new Promise((resolve, reject) => {
+    map.on("load", () => {
+     resolve(map);
+     map.setFog({
+      "space-color": "#8BCDED",
+     });
+    });
+   });
+
+   Promise.all([
+    d3.csv(
+     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtRXW8xFrMbGQU6x74XFZqD5xVoPduIpgTCUS6W8H3Txr24kPKTQVLFsHM2kYrn01WVJiSiA9lfFoo/pub?gid=0&single=true&output=csv"
+    ),
+    d3.csv(
+     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtRXW8xFrMbGQU6x74XFZqD5xVoPduIpgTCUS6W8H3Txr24kPKTQVLFsHM2kYrn01WVJiSiA9lfFoo/pub?gid=2131501706&single=true&output=csv"
+    ),
+    mapLoaderPromise,
+   ]).then(([data, options, map]) => {
+    
+    data.forEach((d) => (d.imageUrl = "./assets/" + d.hotspoticon));
+    data.forEach(function (d) {
+     if (d.color === "") {
+      d.color = "#4d4dff";
+     }
+    });
+
+    renderMap(data, map);
+    addButtons(
+     options.filter((d) => d.type == "filter"),
+     data
+    );
+    addTooltip(options.filter((d) => d.type == "filter"));
+    options
+     .filter((d) => d.type == "filterButtonColor")
+     .forEach((d) => {
+      d3
+       .selectAll(".app-globe-container .button-1")
+       .style("background-color", d.value);
+     });
+
+    options
+     .filter((d) => d.type == "projection")
+     .forEach((d) => {
+      globe = d.value == "globe";
+      updateCamera();
+     });
+   });
+   function addButtons(options, data) {
+    var filteredData = [];
+    var buttons = d3
+     .select(".filters-container")
+     .selectAll("div")
+     .data(options)
+     .enter()
+     .append("div")
+     .classed("button-wrapper-div", true)
+     .html(
+      (d, i) =>
+       `<div class="buttons-text"> <button class="button-1">${d.name}</button></div>`
+     )
+     .on("click", function (e, d) {
+      let currentFilteredData = data.filter(function (element) {
+       return element[d.column] == d.value;
       });
 
-      const mapLoaderPromise = new Promise((resolve, reject) => {
-        map.on("load", () => {
-          resolve(map);
-        });
-      });
-
-      Promise.all([
-        d3.csv(
-          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtRXW8xFrMbGQU6x74XFZqD5xVoPduIpgTCUS6W8H3Txr24kPKTQVLFsHM2kYrn01WVJiSiA9lfFoo/pub?gid=0&single=true&output=csv"
-        ),
-        d3.csv(
-          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtRXW8xFrMbGQU6x74XFZqD5xVoPduIpgTCUS6W8H3Txr24kPKTQVLFsHM2kYrn01WVJiSiA9lfFoo/pub?gid=2131501706&single=true&output=csv"
-        ),
-        mapLoaderPromise,
-      ]).then(([data, options, map]) => {
-        console.log(data, options, map);
-        data.forEach((d) => (d.imageUrl = "./assets/" + d.hotspoticon));
-        data.forEach(function (d) {
-          if (d.color === "") {
-            d.color = "#4d4dff";
-          }
-        });
-
-        renderMap(data, map);
-        addButtons(
-          options.filter((d) => d.type == "filter"),
-          data
+      if (d3.select(this).classed("active")) {
+       d3.select(this).classed("active", false);
+       if (filteredData.length == data.length) {
+        filteredData = data.filter((el) => !currentFilteredData.includes(el));
+       } else {
+        filteredData = filteredData.filter(
+         (el) => !currentFilteredData.includes(el)
         );
-        addTooltip(options.filter((d) => d.type == "filter"));
-        options
-          .filter((d) => d.type == "filterButtonColor")
-          .forEach((d) => {
-            d3.selectAll(".app-globe-container .button-1").style(
-              "background-color",
-              d.value
-            );
-          });
-
-        options
-          .filter((d) => d.type == "projection")
-          .forEach((d) => {
-            globe = d.value == "globe";
-            updateCamera()
-          });
-      });
-      function addButtons(options, data) {
-        var filteredData = [];
-        var buttons = d3
-          .select(".filters-container")
-          .selectAll("div")
-          .data(options)
-          .enter()
-          .append("div")
-          .classed("button-wrapper-div", true)
-          .html(
-            (d, i) =>
-              `<div class="buttons-text"> <button class="button-1">${d.name}</button></div>`
-          )
-          .on("click", function (e, d) {
-            let currentFilteredData = data.filter(function (element) {
-              return element[d.column] == d.value;
-            });
-
-            if (d3.select(this).classed("active")) {
-              d3.select(this).classed("active", false);
-              if (filteredData.length == data.length) {
-                filteredData = data.filter(
-                  (el) => !currentFilteredData.includes(el)
-                );
-              } else {
-                filteredData = filteredData.filter(
-                  (el) => !currentFilteredData.includes(el)
-                );
-              }
-            } else {
-              debugger;
-              d3.selectAll(".button-wrapper-div").classed("active", false);
-              d3.select(this).classed("active", true);
-              filteredData = currentFilteredData; // filteredData.concat(currentFilteredData);
-            }
-            if (filteredData.length == 0) {
-              renderMap(data, map);
-            } else {
-              renderMap(filteredData, map);
-            }
-          });
+       }
+      } else {
+       d3.selectAll(".button-wrapper-div").classed("active", false);
+       d3.select(this).classed("active", true);
+       filteredData = currentFilteredData; // filteredData.concat(currentFilteredData);
       }
-
-      function addTooltip(options) {
-        d3.select(".tooltip-container")
-          .append("div")
-          .attr("class", "tooltip-div")
-          .html(`<div class="tooltip-html"> </div>`);
+      if (filteredData.length == 0) {
+       renderMap(data, map);
+      } else {
+       renderMap(filteredData, map);
       }
-      function renderMap(data, map) {
-        removeLayersAndSources(
-          map
-        ); /*  let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
+     });
+   }
+
+   function addTooltip(options) {
+    d3
+     .select(".tooltip-container")
+     .append("div")
+     .attr("class", "tooltip-div")
+     .html(`<div class="tooltip-html"> </div>`);
+   }
+   function renderMap(data, map) {
+    removeLayersAndSources(
+     map
+    ); /*  let allImageUrls = [...new Set(data.map((d) => d.imageUrl))];
         let imgPromisesArray = allImageUrls.map(
           (url) =>
             new Promise((resolve, reject) =>
@@ -284,49 +288,49 @@
             )
         );*/
 
-        //   Promise.all(imgPromisesArray).then((imageObjects) => {
-        const geojson = convertDataToGeojson(data);
-        console.log("got geojson", geojson);
+    //   Promise.all(imgPromisesArray).then((imageObjects) => {
+    const geojson = convertDataToGeojson(data);
+    
 
-        /*    console.log(imageObjects);
+    /*    console.log(imageObjects);
           imageObjects.forEach((imgObj) => {
             map.addImage(imgObj.name, imgObj.image);
             console.log("added", imgObj);
           });*/
 
-        addImagesToMap(geojson, map);
-        //   });
-      }
+    addImagesToMap(geojson, map);
+    //   });
+   }
 
-      function convertDataToGeojson(data) {
-        let geojson = {
-          type: "FeatureCollection",
-          features: [],
-        };
-        data.forEach((d) => {
-          let feature = {
-            type: "Feature",
-            geometry: {
-              type: "Point",
-              coordinates: [d.long, d.lat],
-            },
-            properties: d,
-          };
-          geojson.features.push(feature);
-        });
-        return geojson;
-      }
+   function convertDataToGeojson(data) {
+    let geojson = {
+     type: "FeatureCollection",
+     features: [],
+    };
+    data.forEach((d) => {
+     let feature = {
+      type: "Feature",
+      geometry: {
+       type: "Point",
+       coordinates: [d.long, d.lat],
+      },
+      properties: d,
+     };
+     geojson.features.push(feature);
+    });
+    return geojson;
+   }
 
-      function addImagesToMap(geojson, map) {
-        // Add a data source containing one point feature.
-        map.addSource("pointsSource", {
-          type: "geojson",
-          data: geojson,
-          maxzoom: 7,
-        });
+   function addImagesToMap(geojson, map) {
+    // Add a data source containing one point feature.
+    map.addSource("pointsSource", {
+     type: "geojson",
+     data: geojson,
+     maxzoom: 7,
+    });
 
-        // Add a layer to use the image to represent the data.
-        /*    map.addLayer({
+    // Add a layer to use the image to represent the data.
+    /*    map.addLayer({
           id: "pointsLayer",
           type: "circle",//"symbol",
           source: "pointsSource", // reference the data source
@@ -340,78 +344,69 @@
       "circle-radius":15
     }
         });*/
-        map.addLayer({
-          id: "pointsLayer",
-          type: "circle",
-          source: "pointsSource",
-          paint: {
-            "circle-color": ["get", "color"],
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              // zoom is 5 (or less) -> circle radius will be 1px
-              5.9,
-              5,
-              // zoom is 10 (or greater) -> circle radius will be 5px
-              6,
-              10,
-            ],
-            "circle-stroke-width": 8,
-            "circle-stroke-color": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              // zoom is 5 (or less) -> circle radius will be 1px
-              5.9,
-              "lightgray",
-              // zoom is 10 (or greater) -> circle radius will be 5px
-              6,
-              "#19A34A",
-            ],
-          },
-        });
+    map.addLayer({
+     id: "pointsLayer",
+     type: "circle",
+     source: "pointsSource",
+     paint: {
+      "circle-color": ["get", "color"],
+      "circle-radius": [
+       "interpolate",
+       ["linear"],
+       ["zoom"],
+       // zoom is 5 (or less) -> circle radius will be 1px
+       5.9,
+       9,
+       // zoom is 10 (or greater) -> circle radius will be 5px
+       6,
+       10,
+      ],
+      "circle-stroke-width": 8,
+      "circle-stroke-color": "lightgray",
+     },
+    });
 
-        map.on("mousemove", (e) => {
-          console.log(map.getZoom());
-          console.log("mousemove", e);
-        });
+    map.on("mousemove", (e) => {
 
-        map.on("mouseenter", "pointsLayer", (e) => {
-          console.log("mouseenter");
-          d3.select(".tooltip-div").html(
-            `<div class="tooltip-html"><div class="tooltip-picture"><img src= ${e.features[0].properties.imageUrl} ></div> <div class="tooltip-name"> ${e.features[0].properties.headtxt}</div> </div>`
-          );
-          d3.select(".tooltip-container").style("display", "block");
-        });
+    });
 
-        map.on("mouseleave", "pointsLayer", () => {
-          console.log("pointslayer mouseleave");
-          map.getCanvas().style.cursor = "";
-          d3.select(".tooltip-container").style("display", "none");
-        });
+    map.on("mouseenter", "pointsLayer", (e) => {
+     
+     d3
+      .select(".tooltip-div")
+      .html(
+       `<div class="tooltip-html"><div class="tooltip-picture"><img src= ${e.features[0].properties.imageUrl} ></div> <div class="tooltip-name"> ${e.features[0].properties.headtxt}</div> </div>`
+      );
+     d3.select(".tooltip-container").style("display", "block");
+    });
 
-        map.on("click", "pointsLayer", (e) => {
-          window.open(e.features[0].properties.url, "_blank");
-        });
-      }
+    map.on("mouseleave", "pointsLayer", () => {
+     
+     map.getCanvas().style.cursor = "";
+     d3.select(".tooltip-container").style("display", "none");
+    });
 
-      function removeLayersAndSources(map) {
-        if (map.getLayer("pointsLayer")) {
-          map.removeLayer("pointsLayer");
-        }
-        if (map.getSource("pointsSource")) {
-          map.removeSource("pointsSource");
-        }
-      }
+    map.on("click", "pointsLayer", (e) => {
+     window.open(e.features[0].properties.url, "_blank");
+    });
+   }
 
-      function switchCamera() {
-        globe = !globe;
-        updateCamera();
-      }
-      function updateCamera() {
-        map.setProjection({ name: globe ? "globe" : "mercator" });
-      }
-    </script>
-  </body>
+   function removeLayersAndSources(map) {
+    if (map.getLayer("pointsLayer")) {
+     map.removeLayer("pointsLayer");
+    }
+    if (map.getSource("pointsSource")) {
+     map.removeSource("pointsSource");
+    }
+   }
+
+   function switchCamera() {
+    globe = !globe;
+    updateCamera();
+   }
+   function updateCamera() {
+    map.setProjection({name: globe ? "globe" : "mercator"});
+   }
+  </script>
+ </body>
 </html>
